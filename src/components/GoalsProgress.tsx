@@ -72,7 +72,7 @@ export default function GoalsProgress() {
       case 'magenta':
         return 'bg-[#b000ff] shadow-[0_0_10px_#b000ff]';
       default:
-        return 'bg-[#00ffc2] shadow-[0_0_10px_#00ffc2]';
+        return 'bg-[var(--theme-color)] shadow-[0_0_10px_var(--theme-color)]';
     }
   };
 
@@ -83,7 +83,7 @@ export default function GoalsProgress() {
       case 'magenta':
         return 'border-[#b000ff]/30';
       default:
-        return 'border-[#00ffc2]/30';
+        return 'border-[var(--theme-color)]/30';
     }
   };
 
@@ -94,37 +94,37 @@ export default function GoalsProgress() {
       case 'magenta':
         return 'text-[#b000ff]';
       default:
-        return 'text-[#00ffc2]';
+        return 'text-[var(--theme-color)]';
     }
   };
 
   return (
-    <div className="bg-[#0a1a2f]/40 border border-[#00ffc2]/10 p-3 flex flex-col mt-3 relative overflow-hidden">
+    <div className="bg-[#0a1a2f]/40 border border-[var(--theme-color)]/10 p-3 flex flex-col mt-3 relative overflow-hidden">
       {/* Subtle background scanner just for context */}
       <div className="scanner-overlay-neon opacity-10"></div>
 
-      <div className="text-[10px] uppercase opacity-50 mb-3 flex items-center justify-between">
+      <div className="text-base uppercase opacity-50 mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Target size={12} className="text-[#00ffc2]" />
+          <Target size={12} className="text-[var(--theme-color)]" />
           <span>Progresso de Metas</span>
         </div>
         <button 
           onClick={() => setShowAdd(!showAdd)} 
-          className="text-[#00ffc2] hover:text-white hover:bg-[#00ffc2]/20 border border-[#00ffc2]/30 px-1 py-0.5 text-[8px] font-mono font-bold tracking-widest cursor-pointer uppercase flex items-center gap-0.5"
+          className="text-[var(--theme-color)] hover:text-white hover:bg-[var(--theme-color)]/20 border border-[var(--theme-color)]/30 px-1 py-0.5 text-base font-mono font-bold tracking-widest cursor-pointer uppercase flex items-center gap-0.5"
         >
           <Plus size={8} /> ADD_META
         </button>
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAddGoal} className="mb-3 p-2 bg-black/60 border border-[#00ffc2]/30 space-y-2">
+        <form onSubmit={handleAddGoal} className="mb-3 p-2 bg-black/60 border border-[var(--theme-color)]/30 space-y-2">
           <input
             type="text"
             required
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="NOME DO OBJETIVO"
-            className="w-full bg-[#0a1a2f]/40 border border-[#00ffc2]/20 p-1 text-[9px] text-[#00ffc2] placeholder-[#00ffc2]/30 outline-none focus:border-[#00ffc2] font-mono"
+            className="w-full bg-[#0a1a2f]/40 border border-[var(--theme-color)]/20 p-1 text-base text-[var(--theme-color)] placeholder-[var(--theme-color)]/30 outline-none focus:border-[var(--theme-color)] font-mono"
           />
           <div className="flex gap-1.5">
             <input
@@ -133,12 +133,12 @@ export default function GoalsProgress() {
               value={newTarget}
               onChange={(e) => setNewTarget(e.target.value)}
               placeholder="META R$"
-              className="flex-1 bg-[#0a1a2f]/40 border border-[#00ffc2]/20 p-1 text-[9px] text-[#00ffc2] placeholder-[#00ffc2]/30 outline-none focus:border-[#00ffc2] font-mono"
+              className="flex-1 bg-[#0a1a2f]/40 border border-[var(--theme-color)]/20 p-1 text-base text-[var(--theme-color)] placeholder-[var(--theme-color)]/30 outline-none focus:border-[var(--theme-color)] font-mono"
             />
             <select
               value={newColor}
               onChange={(e) => setNewColor(e.target.value)}
-              className="bg-[#0a1a2f]/40 border border-[#00ffc2]/20 p-1 text-[9px] text-[#00ffc2] outline-none font-mono"
+              className="bg-[#0a1a2f]/40 border border-[var(--theme-color)]/20 p-1 text-base text-[var(--theme-color)] outline-none font-mono"
             >
               <option value="neon">CYAN</option>
               <option value="blue">AZUL</option>
@@ -146,7 +146,7 @@ export default function GoalsProgress() {
             </select>
             <button
               type="submit"
-              className="bg-[#00ffc2]/20 border border-[#00ffc2] text-[#00ffc2] px-2 py-1 text-[9px] font-mono font-bold hover:bg-[#00ffc2] hover:text-black cursor-pointer"
+              className="bg-[var(--theme-color)]/20 border border-[var(--theme-color)] text-[var(--theme-color)] px-2 py-1 text-base font-mono font-bold hover:bg-[var(--theme-color)] hover:text-black cursor-pointer"
             >
               <Check size={10} />
             </button>
@@ -159,7 +159,7 @@ export default function GoalsProgress() {
           const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
           return (
             <div key={goal.id} className="space-y-1">
-              <div className="flex justify-between items-center text-[9px] font-mono">
+              <div className="flex justify-between items-center text-base font-mono">
                 <span className={`font-bold ${getTextColorClass(goal.color)}`}>{goal.name}</span>
                 <span className="text-white/60">
                   R$ {goal.current.toLocaleString('pt-BR')} / {goal.target.toLocaleString('pt-BR')} ({percent}%)

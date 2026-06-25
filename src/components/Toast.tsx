@@ -46,7 +46,7 @@ export default function ToastContainer() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
             className={`border bg-black/90 p-3 flex items-start gap-3 backdrop-blur-md shadow-lg pointer-events-auto min-w-[250px] max-w-sm ${
-              toast.type === 'success' ? 'border-[#00ffc2] text-[#00ffc2] shadow-[0_0_10px_rgba(0,255,194,0.2)]' :
+              toast.type === 'success' ? 'border-[var(--theme-color)] text-[var(--theme-color)] shadow-[0_0_10px_rgba(0,255,194,0.2)]' :
               toast.type === 'error' ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' :
               toast.type === 'warning' ? 'border-orange-500 text-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.2)]' :
               'border-[#00d4ff] text-[#00d4ff] shadow-[0_0_10px_rgba(0,212,255,0.2)]'
@@ -54,10 +54,10 @@ export default function ToastContainer() {
           >
             <Terminal size={16} className="mt-0.5 opacity-80" />
             <div className="flex-1">
-              <div className="text-[9px] uppercase tracking-widest opacity-60 mb-1">
+              <div className="text-base uppercase tracking-widest opacity-60 mb-1">
                 {toast.type === 'success' ? 'SYS.SUCCESS' : toast.type === 'error' ? 'SYS.ERROR' : toast.type === 'warning' ? 'SYS.WARN' : 'SYS.INFO'}
               </div>
-              <div className="text-xs font-mono font-bold leading-tight">
+              <div className="text-base font-mono font-bold leading-tight">
                 &gt; {toast.message}
               </div>
             </div>

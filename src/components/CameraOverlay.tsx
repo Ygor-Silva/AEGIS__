@@ -66,9 +66,9 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
   };
 
   return (
-    <div className="absolute inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center border-4 border-[#00ffc2]/50 backdrop-blur-sm p-4">
+    <div className="absolute inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center border-4 border-[var(--theme-color)]/50 backdrop-blur-sm p-4">
       <div className="flex justify-between items-center w-full max-w-md mb-4">
-        <div className="text-[10px] font-bold tracking-widest text-[#00ffc2] uppercase">
+        <div className="text-base font-bold tracking-widest text-[var(--theme-color)] uppercase">
           AEGIS // CAMERA SCANNER
         </div>
         <button
@@ -79,7 +79,7 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
         </button>
       </div>
 
-      <div className="relative w-full max-w-md aspect-[3/4] bg-black border border-[#00ffc2]/30 flex flex-col items-center justify-center overflow-hidden">
+      <div className="relative w-full max-w-md aspect-[3/4] bg-black border border-[var(--theme-color)]/30 flex flex-col items-center justify-center overflow-hidden">
         {!capturedImage ? (
           <>
             <video
@@ -90,14 +90,14 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
             />
             {/* Scanner overlay effect */}
             <div className="absolute inset-0 pointer-events-none border-[20px] border-black/50"></div>
-            <div className="absolute inset-0 border-2 border-[#00ffc2]/50 m-8 pointer-events-none">
-              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#00ffc2] -mt-0.5 -ml-0.5"></div>
-              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#00ffc2] -mt-0.5 -mr-0.5"></div>
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#00ffc2] -mb-0.5 -ml-0.5"></div>
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#00ffc2] -mb-0.5 -mr-0.5"></div>
+            <div className="absolute inset-0 border-2 border-[var(--theme-color)]/50 m-8 pointer-events-none">
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[var(--theme-color)] -mt-0.5 -ml-0.5"></div>
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[var(--theme-color)] -mt-0.5 -mr-0.5"></div>
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[var(--theme-color)] -mb-0.5 -ml-0.5"></div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[var(--theme-color)] -mb-0.5 -mr-0.5"></div>
             </div>
-            <div className="absolute w-full h-1 bg-[#00ffc2] shadow-[0_0_15px_#00ffc2,0_0_30px_#00ffc2] animate-[scan_2s_ease-in-out_infinite] z-10 flex flex-col pointer-events-none">
-              <div className="w-full h-16 bg-gradient-to-t from-[#00ffc2]/40 to-transparent -mt-16"></div>
+            <div className="absolute w-full h-1 bg-[var(--theme-color)] shadow-[0_0_15px_var(--theme-color),0_0_30px_var(--theme-color)] animate-[scan_2s_ease-in-out_infinite] z-10 flex flex-col pointer-events-none">
+              <div className="w-full h-16 bg-gradient-to-t from-[var(--theme-color)]/40 to-transparent -mt-16"></div>
             </div>
           </>
         ) : (
@@ -110,9 +110,9 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
         {!capturedImage ? (
           <button
             onClick={takePhoto}
-            className="w-16 h-16 rounded-full border-2 border-[#00ffc2] flex items-center justify-center hover:bg-[#00ffc2]/20 transition-colors"
+            className="w-16 h-16 rounded-full border-2 border-[var(--theme-color)] flex items-center justify-center hover:bg-[var(--theme-color)]/20 transition-colors"
           >
-            <div className="w-12 h-12 rounded-full bg-[#00ffc2] opacity-50 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--theme-color)] opacity-50 flex items-center justify-center">
               <Camera size={24} className="text-black" />
             </div>
           </button>
@@ -120,13 +120,13 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
           <>
             <button
               onClick={retake}
-              className="px-6 py-3 border border-red-500 text-red-500 uppercase tracking-widest text-[10px] hover:bg-red-500/20 font-bold"
+              className="px-6 py-3 border border-red-500 text-red-500 uppercase tracking-widest text-base hover:bg-red-500/20 font-bold"
             >
               Recapturar
             </button>
             <button
               onClick={confirm}
-              className="px-6 py-3 bg-[#00ffc2] text-black uppercase tracking-widest text-[10px] hover:bg-white font-bold flex items-center space-x-2"
+              className="px-6 py-3 bg-[var(--theme-color)] text-black uppercase tracking-widest text-base hover:bg-white font-bold flex items-center space-x-2"
             >
               <Check size={16} />
               <span>Confirmar</span>

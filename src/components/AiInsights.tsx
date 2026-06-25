@@ -28,22 +28,17 @@ export default function AiInsights() {
   if (!isVisible && currentInsight === -1) return null; // Just for initial mount safety
 
   return (
-    <div className="bg-[#0a1a2f]/60 border border-[#b000ff]/30 p-4 relative overflow-hidden backdrop-blur-sm group">
+    <div className="bg-[#0a1a2f]/60 border border-[#b000ff]/30 p-4 rounded-xl relative h-full flex flex-col overflow-hidden backdrop-blur-sm group">
       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[#b000ff] to-transparent opacity-50"></div>
       
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <BrainCircuit size={14} className="text-[#b000ff] animate-pulse" />
-          <span className="text-[10px] uppercase font-bold tracking-widest text-[#b000ff]">Insights de A.E.G.I.S.</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <BrainCircuit size={16} className="text-[#b000ff] animate-pulse" />
+          <span className="text-sm uppercase font-bold tracking-widest text-[#b000ff]">Insights de A.E.G.I.S.</span>
         </div>
-        <button 
-          onClick={() => setIsVisible(false)} 
-          className="text-[#b000ff]/50 hover:text-[#b000ff] transition-colors"
-        >
-        </button>
       </div>
 
-      <div className="min-h-[60px] flex items-center">
+      <div className="flex-1 flex flex-col justify-center overflow-y-auto scrollbar-none">
         <AnimatePresence mode="wait">
           {isVisible && (
             <motion.div
@@ -61,7 +56,7 @@ export default function AiInsights() {
         </AnimatePresence>
       </div>
       
-      <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[#b000ff]/30 m-1"></div>
+      <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[#b000ff]/30 m-1 rounded-br-lg"></div>
     </div>
   );
 }

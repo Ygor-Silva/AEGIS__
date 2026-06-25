@@ -27,7 +27,7 @@ export default function QuickActions({ onLogout, onOpenProfile, onOpenSettings }
 
   const actions = [
     { icon: <User size={16} />, label: "PERFIL", onClick: handleProfile, color: "text-[#00d4ff]", border: "border-[#00d4ff]/50", bgHover: "hover:bg-[#00d4ff]" },
-    { icon: <Settings size={16} />, label: "CONFIGURAÇÕES", onClick: () => { onOpenSettings(); setIsOpen(false); }, color: "text-[#00ffc2]", border: "border-[#00ffc2]/50", bgHover: "hover:bg-[#00ffc2]" },
+    { icon: <Settings size={16} />, label: "CONFIGURAÇÕES", onClick: () => { onOpenSettings(); setIsOpen(false); }, color: "text-[var(--theme-color)]", border: "border-[var(--theme-color)]/50", bgHover: "hover:bg-[var(--theme-color)]" },
     { icon: <Download size={16} />, label: "EXPORTAR RELATÓRIO", onClick: handleExport, color: "text-[#b000ff]", border: "border-[#b000ff]/50", bgHover: "hover:bg-[#b000ff]" },
     { icon: <LogOut size={16} />, label: "DESCONECTAR", onClick: onLogout, color: "text-[#ff0055]", border: "border-[#ff0055]/50", bgHover: "hover:bg-[#ff0055]" },
   ];
@@ -51,7 +51,7 @@ export default function QuickActions({ onLogout, onOpenProfile, onOpenSettings }
                 onClick={action.onClick}
                 className={`flex items-center gap-3 bg-black/80 backdrop-blur-sm border ${action.border} ${action.color} px-4 py-2 hover:text-black ${action.bgHover} transition-all shadow-[0_0_10px_rgba(0,0,0,0.5)] group cursor-pointer`}
               >
-                <span className="text-[10px] font-bold tracking-widest uppercase opacity-80 group-hover:opacity-100">{action.label}</span>
+                <span className="text-base font-bold tracking-widest uppercase opacity-80 group-hover:opacity-100">{action.label}</span>
                 {action.icon}
               </motion.button>
             ))}
@@ -61,7 +61,7 @@ export default function QuickActions({ onLogout, onOpenProfile, onOpenSettings }
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-[#0a1a2f] border-2 border-[#00ffc2] text-[#00ffc2] flex items-center justify-center rounded-none shadow-[0_0_20px_rgba(0,255,194,0.3)] hover:bg-[#00ffc2] hover:text-black hover:shadow-[0_0_30px_rgba(0,255,194,0.6)] transition-all z-10 cursor-pointer"
+        className="w-14 h-14 bg-[#0a1a2f] border-2 border-[var(--theme-color)] text-[var(--theme-color)] flex items-center justify-center rounded-none shadow-[0_0_20px_rgba(0,255,194,0.3)] hover:bg-[var(--theme-color)] hover:text-black hover:shadow-[0_0_30px_rgba(0,255,194,0.6)] transition-all z-10 cursor-pointer"
       >
         <motion.div
           animate={{ rotate: isOpen ? 45 : 0 }}

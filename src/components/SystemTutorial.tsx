@@ -82,38 +82,38 @@ export default function SystemTutorial({ onClose }: SystemTutorialProps) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-[#020408] border-2 border-[#00ffc2] max-w-lg w-full relative overflow-hidden shadow-[0_0_40px_rgba(0,255,194,0.3)] font-mono"
+        className="bg-[#020408] border-2 border-[var(--theme-color)] max-w-lg w-full relative overflow-hidden shadow-[0_0_40px_rgba(0,255,194,0.3)] font-mono"
       >
         {/* Neon scan overlays */}
         <div className="scanner-overlay-neon opacity-20"></div>
 
         {/* Framing borders */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#00ffc2]" />
-        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#00ffc2]" />
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#00ffc2]" />
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#00ffc2]" />
+        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[var(--theme-color)]" />
+        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[var(--theme-color)]" />
+        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[var(--theme-color)]" />
+        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[var(--theme-color)]" />
 
         {/* Top telemetry bar */}
-        <div className="bg-[#0a1a2f] border-b border-[#00ffc2]/30 px-6 py-3 flex items-center justify-between">
+        <div className="bg-[#0a1a2f] border-b border-[var(--theme-color)]/30 px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="text-[#00ffc2] animate-pulse" size={16} />
-            <span className="text-[10px] uppercase font-bold tracking-widest text-[#00ffc2]">CALIBRAÇÃO DE COGNIÇÃO HUD</span>
+            <Shield className="text-[var(--theme-color)] animate-pulse" size={16} />
+            <span className="text-base uppercase font-bold tracking-widest text-[var(--theme-color)]">CALIBRAÇÃO DE COGNIÇÃO HUD</span>
           </div>
-          <span className="text-[9px] text-[#00ffc2]/50">PASSO_0{currentStep + 1} / 0{steps.length}</span>
+          <span className="text-base text-[var(--theme-color)]/50">PASSO_0{currentStep + 1} / 0{steps.length}</span>
         </div>
 
         {/* Steps Content */}
         <div className="p-6 space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#00ffc2]/10 border border-[#00ffc2]/30 text-[9px] text-[#00ffc2] tracking-wider uppercase">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[var(--theme-color)]/10 border border-[var(--theme-color)]/30 text-base text-[var(--theme-color)] tracking-wider uppercase">
             <Sparkles size={10} />
             {current.highlightText}
           </div>
 
-          <h2 className="text-[#00ffc2] font-black text-lg tracking-widest uppercase">
+          <h2 className="text-[var(--theme-color)] font-black text-lg tracking-widest uppercase">
             {current.title}
           </h2>
 
-          <p className="text-xs text-white/80 leading-relaxed font-sans min-h-[90px]">
+          <p className="text-base text-white/80 leading-relaxed font-sans min-h-[90px]">
             {current.description}
           </p>
 
@@ -122,7 +122,7 @@ export default function SystemTutorial({ onClose }: SystemTutorialProps) {
             {steps.map((_, idx) => (
               <div 
                 key={idx} 
-                className={`h-1.5 transition-all duration-300 ${idx === currentStep ? 'w-8 bg-[#00ffc2]' : 'w-2 bg-[#00ffc2]/20'}`}
+                className={`h-1.5 transition-all duration-300 ${idx === currentStep ? 'w-8 bg-[var(--theme-color)]' : 'w-2 bg-[var(--theme-color)]/20'}`}
               />
             ))}
           </div>
@@ -131,7 +131,7 @@ export default function SystemTutorial({ onClose }: SystemTutorialProps) {
           <div className="flex items-center justify-between pt-4 border-t border-white/5">
             <button 
               onClick={handleSkip} 
-              className="text-[10px] text-white/40 hover:text-white transition-colors cursor-pointer uppercase font-bold tracking-widest"
+              className="text-base text-white/40 hover:text-white transition-colors cursor-pointer uppercase font-bold tracking-widest"
             >
               PULAR_INTRO
             </button>
@@ -140,7 +140,7 @@ export default function SystemTutorial({ onClose }: SystemTutorialProps) {
               {currentStep > 0 && (
                 <button 
                   onClick={handlePrev}
-                  className="px-3 py-2 border border-[#00ffc2]/30 text-[#00ffc2] hover:bg-[#00ffc2]/10 transition-all flex items-center gap-1 text-[10px] font-bold tracking-widest cursor-pointer"
+                  className="px-3 py-2 border border-[var(--theme-color)]/30 text-[var(--theme-color)] hover:bg-[var(--theme-color)]/10 transition-all flex items-center gap-1 text-base font-bold tracking-widest cursor-pointer"
                 >
                   <ChevronLeft size={12} /> VOLTAR
                 </button>
@@ -148,7 +148,7 @@ export default function SystemTutorial({ onClose }: SystemTutorialProps) {
 
               <button 
                 onClick={handleNext}
-                className="px-4 py-2 bg-[#00ffc2]/20 border border-[#00ffc2] text-[#00ffc2] hover:bg-[#00ffc2] hover:text-black transition-all flex items-center gap-1 text-[10px] font-bold tracking-widest cursor-pointer"
+                className="px-4 py-2 bg-[var(--theme-color)]/20 border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-black transition-all flex items-center gap-1 text-base font-bold tracking-widest cursor-pointer"
               >
                 {currentStep === steps.length - 1 ? "ENTRADA" : "PRÓXIMO"} <ChevronRight size={12} />
               </button>

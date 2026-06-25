@@ -27,35 +27,35 @@ export default function SpendingTrendChart() {
   const savingsRate = Math.round(((avgIncome - avgExpenses) / avgIncome) * 100);
 
   return (
-    <div className="flex-1 bg-[#0a1a2f]/40 border border-[#00ffc2]/10 p-3 sm:p-4 flex flex-col min-h-[260px] relative overflow-hidden transition-all duration-300">
+    <div className="flex-1 bg-[#0a1a2f]/40 border border-[var(--theme-color)]/10 p-3 sm:p-4 flex flex-col min-h-[260px] relative overflow-hidden transition-all duration-300">
       {/* Laser sweeping scanline animation */}
       <div className="scanner-overlay-magenta"></div>
 
       {/* Card Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-white/5 pb-2">
         <div className="flex items-center gap-2">
-          <TrendingUp size={14} className="text-[#00ffc2]" />
-          <span className="text-[10px] uppercase font-bold tracking-widest text-[#00ffc2]">Tendência de Caixa</span>
+          <TrendingUp size={14} className="text-[var(--theme-color)]" />
+          <span className="text-base uppercase font-bold tracking-widest text-[var(--theme-color)]">Tendência de Caixa</span>
         </div>
 
         {/* Quick Filter Controls */}
         <div className="flex items-center gap-1">
-          <Filter size={10} className="text-[#00ffc2]/40 mr-1" />
+          <Filter size={10} className="text-[var(--theme-color)]/40 mr-1" />
           <button 
             onClick={() => setFilter('both')} 
-            className={`px-1.5 py-0.5 text-[8px] font-mono border tracking-tighter transition-all cursor-pointer ${filter === 'both' ? 'border-[#00ffc2] bg-[#00ffc2]/10 text-[#00ffc2]' : 'border-white/10 text-white/50 hover:text-white'}`}
+            className={`px-1.5 py-0.5 text-base font-mono border tracking-tighter transition-all cursor-pointer ${filter === 'both' ? 'border-[var(--theme-color)] bg-[var(--theme-color)]/10 text-[var(--theme-color)]' : 'border-white/10 text-white/50 hover:text-white'}`}
           >
             GERAL
           </button>
           <button 
             onClick={() => setFilter('income')} 
-            className={`px-1.5 py-0.5 text-[8px] font-mono border tracking-tighter transition-all cursor-pointer ${filter === 'income' ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]' : 'border-white/10 text-white/50 hover:text-white'}`}
+            className={`px-1.5 py-0.5 text-base font-mono border tracking-tighter transition-all cursor-pointer ${filter === 'income' ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]' : 'border-white/10 text-white/50 hover:text-white'}`}
           >
             ENTRADAS
           </button>
           <button 
             onClick={() => setFilter('expense')} 
-            className={`px-1.5 py-0.5 text-[8px] font-mono border tracking-tighter transition-all cursor-pointer ${filter === 'expense' ? 'border-[#ff0055] bg-[#ff0055]/10 text-[#ff0055]' : 'border-white/10 text-white/50 hover:text-white'}`}
+            className={`px-1.5 py-0.5 text-base font-mono border tracking-tighter transition-all cursor-pointer ${filter === 'expense' ? 'border-[#ff0055] bg-[#ff0055]/10 text-[#ff0055]' : 'border-white/10 text-white/50 hover:text-white'}`}
           >
             SAÍDAS
           </button>
@@ -65,18 +65,18 @@ export default function SpendingTrendChart() {
       {/* Explanatory telemetry bar - removes all confusion */}
       <div className="grid grid-cols-3 gap-1 mb-4 bg-black/40 border border-white/5 p-2 text-center">
         <div>
-          <div className="text-[7px] text-white/40 uppercase">Média Mensal Entradas</div>
-          <div className="text-[11px] font-mono font-bold text-[#00d4ff]">R$ {avgIncome.toFixed(0)}</div>
+          <div className="text-base text-white/40 uppercase">Média Mensal Entradas</div>
+          <div className="text-base font-mono font-bold text-[#00d4ff]">R$ {avgIncome.toFixed(0)}</div>
         </div>
         <div>
-          <div className="text-[7px] text-white/40 uppercase">Média Mensal Saídas</div>
-          <div className="text-[11px] font-mono font-bold text-[#ff0055]">R$ {avgExpenses.toFixed(0)}</div>
+          <div className="text-base text-white/40 uppercase">Média Mensal Saídas</div>
+          <div className="text-base font-mono font-bold text-[#ff0055]">R$ {avgExpenses.toFixed(0)}</div>
         </div>
         <div>
-          <div className="text-[7px] text-white/40 uppercase flex items-center justify-center gap-0.5">
+          <div className="text-base text-white/40 uppercase flex items-center justify-center gap-0.5">
             <Percent size={8} /> Taxa Poupança
           </div>
-          <div className="text-[11px] font-mono font-bold text-[#00ffc2]">{savingsRate}%</div>
+          <div className="text-base font-mono font-bold text-[var(--theme-color)]">{savingsRate}%</div>
         </div>
       </div>
 
@@ -94,17 +94,17 @@ export default function SpendingTrendChart() {
                 <stop offset="95%" stopColor="#ff0055" stopOpacity={0.0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#00ffc2" opacity={0.05} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--theme-color)" opacity={0.05} />
             <XAxis 
               dataKey="name" 
-              stroke="#00ffc2" 
+              stroke="var(--theme-color)" 
               opacity={0.4} 
               fontSize={8} 
               tickLine={false} 
               axisLine={false} 
             />
             <YAxis 
-              stroke="#00ffc2" 
+              stroke="var(--theme-color)" 
               opacity={0.4} 
               fontSize={8} 
               tickLine={false} 
@@ -114,14 +114,14 @@ export default function SpendingTrendChart() {
             <Tooltip
               contentStyle={{ 
                 backgroundColor: '#020408', 
-                borderColor: '#00ffc2', 
+                borderColor: 'var(--theme-color)', 
                 borderWidth: '1px',
                 borderRadius: '0px',
                 fontSize: '10px', 
-                color: '#00ffc2',
+                color: 'var(--theme-color)',
                 fontFamily: 'monospace'
               }}
-              labelStyle={{ color: '#00ffc2', fontWeight: 'bold' }}
+              labelStyle={{ color: 'var(--theme-color)', fontWeight: 'bold' }}
               itemStyle={{ color: '#ffffff' }}
             />
             <Legend 

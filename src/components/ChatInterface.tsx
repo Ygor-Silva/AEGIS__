@@ -49,8 +49,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const [isLiveMode, setIsLiveMode] = useState(false);
-  const [liveConnected, setLiveConnected] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -59,11 +58,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   
-  // Live API refs
-  const liveWsRef = useRef<WebSocket | null>(null);
-  const liveInputCtxRef = useRef<AudioContext | null>(null);
-  const liveOutputCtxRef = useRef<AudioContext | null>(null);
-  const liveProcessorRef = useRef<ScriptProcessorNode | null>(null);
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -133,6 +128,16 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
 - Saldo Atual Estimado: R$ ${currentBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 - Saídas Previstas Pendentes: R$ ${projectedExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 - Saldo Projetado Fim de Mês: R$ ${projectedBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+[DIVISÃO DE DESPESAS SUGERIDA (REGRA 50/30/20 SÊNIOR)]:
+1. DESPESAS FIXAS/ESSENCIAIS (META: 50% = R$ ${(income * 0.5).toLocaleString("pt-BR")}):
+   - Gasto Real Atual: R$ ${(income * 0.3576).toLocaleString("pt-BR")} (${Math.round(35.76)}%) - STATUS: EXCELENTE
+   - Itens inclusos: Moradia/Aluguel (R$ ${(income * 0.25).toLocaleString("pt-BR")}), Planos & Assinaturas (R$ ${(income * 0.0476).toLocaleString("pt-BR")}), Saúde & Seguros (R$ ${(income * 0.06).toLocaleString("pt-BR")}).
+2. DESPESAS VARIÁVEIS/LIFESTYLE (META: 30% = R$ ${(income * 0.3).toLocaleString("pt-BR")}):
+   - Gasto Real Atual: R$ ${(income * 0.23425).toLocaleString("pt-BR")} (${Math.round(23.425)}%) - STATUS: EXCELENTE
+   - Itens inclusos: Supermercado Base (R$ ${(income * 0.10125).toLocaleString("pt-BR")}), Deliveries/Lazer (R$ ${(income * 0.083).toLocaleString("pt-BR")}), Transporte App (R$ ${(income * 0.05).toLocaleString("pt-BR")}).
+3. INVESTIMENTO/FUTURO (META: 20% = R$ ${(income * 0.2).toLocaleString("pt-BR")}):
+   - Alocação Real Atual: R$ ${(income - (income * 0.3576 + income * 0.23425)).toLocaleString("pt-BR")} (${Math.round((1 - (0.3576 + 0.23425)) * 100)}%) - STATUS: EXCELENTE
 
 [LANÇAMENTOS DO EXTRATO RECENTE (PROPORCIONAIS)]:
 1. 01/06 - SALÁRIO: + R$ ${income.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -379,79 +384,17 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
     }
   };
 
-  const startLiveMode = async () => {
-    setIsLiveMode(true);
-    try {
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const ws = new WebSocket(`${protocol}//${window.location.host}/live`);
-      liveWsRef.current = ws;
 
-      const inputAudioCtx = new AudioContext({ sampleRate: 16000 });
-      const outputAudioCtx = new AudioContext({ sampleRate: 24000 });
-      liveInputCtxRef.current = inputAudioCtx;
-      liveOutputCtxRef.current = outputAudioCtx;
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const source = inputAudioCtx.createMediaStreamSource(stream);
-      const processor = inputAudioCtx.createScriptProcessor(4096, 1, 1);
-      liveProcessorRef.current = processor;
-
-      source.connect(processor);
-      processor.connect(inputAudioCtx.destination);
-
-      ws.onopen = () => setLiveConnected(true);
-
-      processor.onaudioprocess = (e) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          const base64 = pcmToBase64(e.inputBuffer.getChannelData(0));
-          ws.send(JSON.stringify({ audio: base64 }));
-        }
-      };
-
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.audio && liveOutputCtxRef.current) {
-          playAudioChunk(liveOutputCtxRef.current, msg.audio);
-        }
-      };
-    } catch (err) {
-      console.error("Live mode error", err);
-      stopLiveMode();
-    }
-  };
-
-  const stopLiveMode = () => {
-    if (liveWsRef.current) {
-      liveWsRef.current.close();
-      liveWsRef.current = null;
-    }
-    if (liveInputCtxRef.current) {
-      liveInputCtxRef.current.close();
-      liveInputCtxRef.current = null;
-    }
-    if (liveOutputCtxRef.current) {
-      liveOutputCtxRef.current.close();
-      liveOutputCtxRef.current = null;
-    }
-    setLiveConnected(false);
-    setIsLiveMode(false);
-  };
 
   return (
-    <div className="flex flex-col h-full bg-transparent text-[#00ffc2] p-4 relative z-20">
+    <div className="flex flex-col h-full bg-transparent text-[var(--theme-color)] p-4 relative z-20">
       {/* HUD Header overlay inside chat area */}
       <div className="flex justify-between items-center pb-2 mb-4">
         <div className="flex items-center space-x-2"></div>
-        <button
-          onClick={isLiveMode ? stopLiveMode : startLiveMode}
-          className={`flex items-center space-x-2 px-3 py-1 border ${isLiveMode ? 'border-red-500 text-red-500 bg-red-500/10' : 'border-[#00ffc2]/50 hover:bg-[#00ffc2]/10'}`}
-        >
-          <Radio size={16} className={isLiveMode && liveConnected ? 'animate-pulse' : ''} />
-          <span className="text-[10px] font-bold uppercase">{isLiveMode ? "LINK ATIVO" : "VOICE LINK"}</span>
-        </button>
+
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4 scrollbar-thin scrollbar-thumb-[#00ffc2]/20 pr-2">
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4 scrollbar-thin scrollbar-thumb-[var(--theme-color)]/20 pr-2">
         <AnimatePresence>
           {messages.map((msg) => (
             <motion.div
@@ -461,18 +404,18 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[85%] p-3 text-sm ${
+                className={`max-w-[85%] p-3 text-base ${
                   msg.role === "user"
                     ? "bg-[#00d4ff]/10 border border-[#00d4ff]/30 text-[#00d4ff]"
-                    : "bg-[#00ffc2]/5 border-l-2 border-[#00ffc2] text-white"
+                    : "bg-[var(--theme-color)]/5 border-l-2 border-[var(--theme-color)] text-white"
                 }`}
               >
                 {msg.role === "model" && (
-                  <div className="flex justify-between items-start mb-2 border-b border-[#00ffc2]/20 pb-1">
-                    <span className="text-[9px] font-bold tracking-widest text-[#00ffc2]">AEGIS_RESPONSE</span>
+                  <div className="flex justify-between items-start mb-2 border-b border-[var(--theme-color)]/20 pb-1">
+                    <span className="text-base font-bold tracking-widest text-[var(--theme-color)]">AEGIS_RESPONSE</span>
                     <button
                       onClick={() => handleReadAloud(msg.id, msg.text)}
-                      className={`text-[#00ffc2]/70 hover:text-[#00ffc2] ${msg.isReading ? 'animate-pulse' : ''}`}
+                      className={`text-[var(--theme-color)]/70 hover:text-[var(--theme-color)] ${msg.isReading ? 'animate-pulse' : ''}`}
                     >
                       <Volume2 size={14} />
                     </button>
@@ -486,16 +429,16 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
                     const parsed = parseModelResponse(msg.text);
                     return (
                       <div className="space-y-3">
-                        <div className="prose prose-invert prose-p:my-1 prose-headings:text-[#00ffc2] prose-strong:text-white prose-ul:my-1 prose-li:my-0 text-sm text-white/90">
+                        <div className="prose prose-invert prose-p:my-1 prose-headings:text-[var(--theme-color)] prose-strong:text-white prose-ul:my-1 prose-li:my-0 text-base text-white/90">
                           <ReactMarkdown>{parsed.message}</ReactMarkdown>
                         </div>
                         
                         {parsed.action && (
-                          <div className="p-3 bg-[#00ffc2]/5 border border-[#00ffc2]/20 relative overflow-hidden mt-3 rounded-none">
-                            <div className="absolute top-0 right-0 bg-[#00ffc2]/20 border-l border-b border-[#00ffc2]/30 text-[#00ffc2] text-[7px] font-mono px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                          <div className="p-3 bg-[var(--theme-color)]/5 border border-[var(--theme-color)]/20 relative overflow-hidden mt-3 rounded-none">
+                            <div className="absolute top-0 right-0 bg-[var(--theme-color)]/20 border-l border-b border-[var(--theme-color)]/30 text-[var(--theme-color)] text-base font-mono px-1.5 py-0.5 font-bold uppercase tracking-wider">
                               Ação Prática
                             </div>
-                            <div className="prose prose-invert text-xs font-mono text-white/80 leading-relaxed pt-1">
+                            <div className="prose prose-invert text-base font-mono text-white/80 leading-relaxed pt-1">
                               <ReactMarkdown>{parsed.action}</ReactMarkdown>
                             </div>
                           </div>
@@ -506,7 +449,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
                             {parsed.tags.map((tag, idx) => (
                               <span 
                                 key={idx} 
-                                className="px-2 py-0.5 bg-black/50 border border-[#00d4ff]/25 text-[#00d4ff] text-[8px] font-mono font-bold uppercase tracking-wider"
+                                className="px-2 py-0.5 bg-black/50 border border-[#00d4ff]/25 text-[#00d4ff] text-base font-mono font-bold uppercase tracking-wider"
                               >
                                 #{tag}
                               </span>
@@ -526,8 +469,8 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
           ))}
           {isLoading && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-              <div className="p-3 bg-[#00ffc2]/5 border-l-2 border-[#00ffc2] text-[#00ffc2] text-sm flex items-center space-x-2">
-                <span className="animate-pulse font-bold tracking-widest text-[10px] font-mono">
+              <div className="p-3 bg-[var(--theme-color)]/5 border-l-2 border-[var(--theme-color)] text-[var(--theme-color)] text-base flex items-center space-x-2">
+                <span className="animate-pulse font-bold tracking-widest text-base font-mono">
                   Estou processando seus dados financeiros, um momento...
                 </span>
               </div>
@@ -550,7 +493,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
       )}
 
       {/* Input Form */}
-      <div className="flex items-center space-x-2 border border-[#00ffc2]/30 bg-black/60 p-2 relative">
+      <div className="flex items-center space-x-2 border border-[var(--theme-color)]/30 bg-black/60 p-2 relative">
         <input
           type="file"
           accept="image/*"
@@ -560,14 +503,14 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
         />
         <label
           htmlFor="image-upload"
-          className="cursor-pointer p-2 text-[#00ffc2]/70 hover:text-[#00ffc2] hover:bg-[#00ffc2]/10 transition-colors"
+          className="cursor-pointer p-2 text-[var(--theme-color)]/70 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/10 transition-colors"
         >
           <ImageIcon size={18} />
         </label>
 
         <button
           onClick={() => setIsCameraOpen(true)}
-          className="p-2 text-[#00ffc2]/70 hover:text-[#00ffc2] hover:bg-[#00ffc2]/10 transition-colors"
+          className="p-2 text-[var(--theme-color)]/70 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/10 transition-colors"
         >
           <Camera size={18} />
         </button>
@@ -578,7 +521,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
           onMouseLeave={stopRecording}
           onTouchStart={startRecording}
           onTouchEnd={stopRecording}
-          className={`p-2 transition-colors ${isRecording ? "text-red-500 bg-red-950/40 animate-pulse" : "text-[#00ffc2]/70 hover:text-[#00ffc2] hover:bg-[#00ffc2]/10"}`}
+          className={`p-2 transition-colors ${isRecording ? "text-red-500 bg-red-950/40 animate-pulse" : "text-[var(--theme-color)]/70 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/10"}`}
         >
           {isRecording ? <Square size={18} /> : <Mic size={18} />}
         </button>
@@ -590,15 +533,15 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder={isRecording ? "" : "INSERIR COMANDO..."}
-            className={`w-full bg-transparent border-none outline-none text-[#00ffc2] placeholder-[#00ffc2]/30 text-sm tracking-wide ${isRecording ? 'opacity-0' : 'opacity-100'}`}
+            className={`w-full bg-transparent border-none outline-none text-[var(--theme-color)] placeholder-[var(--theme-color)]/30 text-base tracking-wide ${isRecording ? 'opacity-0' : 'opacity-100'}`}
           />
           {isRecording && (
             <div className="absolute inset-0 flex items-center space-x-1 pointer-events-none pl-2">
-              <span className="mr-2 text-[10px] font-bold text-[#00ffc2] animate-pulse tracking-widest uppercase">Gravando Audio</span>
+              <span className="mr-2 text-base font-bold text-[var(--theme-color)] animate-pulse tracking-widest uppercase">Gravando Audio</span>
               {[...Array(12)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="w-1 bg-[#00ffc2] shadow-[0_0_8px_#00ffc2]"
+                  className="w-1 bg-[var(--theme-color)] shadow-[0_0_8px_var(--theme-color)]"
                   animate={{ height: ["4px", "24px", "4px"] }}
                   transition={{
                     duration: 0.5 + Math.random() * 0.3,
@@ -615,7 +558,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
         <button
           onClick={handleSend}
           disabled={isLoading || (!input.trim() && !previewImage)}
-          className="px-4 py-2 bg-[#00ffc2] text-black font-bold text-[10px] uppercase hover:bg-white transition-colors disabled:opacity-50"
+          className="px-4 py-2 bg-[var(--theme-color)] text-black font-bold text-base uppercase hover:bg-white transition-colors disabled:opacity-50"
         >
           Processar
         </button>
@@ -631,30 +574,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
         />
       )}
 
-      {isLiveMode && (
-        <div className="absolute inset-0 z-50 bg-black/95 flex flex-col items-center justify-center border-4 border-red-900/50">
-          <div className="text-center space-y-6">
-            <div className="relative flex items-center justify-center">
-              <div className="w-32 h-32 border-2 border-red-500 rounded-full animate-ping opacity-20 absolute"></div>
-              <div className="w-24 h-24 border-4 border-red-500 rounded-full animate-pulse flex items-center justify-center bg-red-500/10">
-                 <Radio size={40} className="text-red-500" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-[0.3em] text-red-500">VOICE LINK</h2>
-              <p className="text-red-400/80 uppercase text-sm tracking-widest animate-pulse">
-                {liveConnected ? "CONEXÃO ESTABELECIDA // FALE AGORA" : "CONECTANDO AO NÚCLEO..."}
-              </p>
-            </div>
-            <button
-              onClick={stopLiveMode}
-              className="mt-8 px-6 py-2 border border-red-500 text-red-500 hover:bg-red-500 hover:text-black font-bold uppercase tracking-widest transition-colors"
-            >
-              CORTAR LINK
-            </button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
