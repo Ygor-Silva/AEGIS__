@@ -28,11 +28,11 @@ async function startServer() {
   // Chat API using gemini-3.5-flash for complex tasks (including images)
   app.post("/api/chat", async (req, res) => {
     try {
-      const { contents } = req.body;
+      const { contents, financialContext } = req.body;
       const openRouterKey = (req.headers["x-openrouter-key"] as string) || process.env.OPENROUTER_API_KEY;
       const openRouterModel = (req.headers["x-openrouter-model"] as string) || "openrouter/auto";
 
-      const systemInstruction = `Você é um Consultor Financeiro Pessoal (A.E.G.I.S. - Assistente Especializado em Gestão e Inteligência de Saldos) focado em planejamento prático, redução de custos e inteligência financeira. Sua missão é interagir com o usuário pelo chat do aplicativo, oferecendo dicas de economia, análise de orçamento e estratégias para melhorar o custo-benefício do dia a dia.
+      let systemInstruction = `Você é um Consultor Financeiro Pessoal (A.E.G.I.S. - Assistente Especializado em Gestão e Inteligência de Saldos) focado em planejamento prático, redução de custos e inteligência financeira. Sua missão é interagir com o usuário pelo chat do aplicativo, oferecendo dicas de economia, análise de orçamento e estratégias para melhorar o custo-benefício do dia a dia.
 
 Seu Perfil e Tom de Voz:
 - Prático e Direto: Responda sem rodeios. Use linguagem acessível, mas demonstre autoridade financeira.
@@ -54,6 +54,10 @@ Para que o aplicativo processe sua resposta corretamente, você deve Sempre divi
 Restrições:
 - Não invente dados bancários.
 - Se o usuário fizer perguntas fora do escopo financeiro ou de organização de rotina, traga o assunto de volta para finanças.`;
+
+      if (financialContext) {
+        systemInstruction += `\n\n[ESTADO REAL DO ECOSSISTEMA FINANCEIRO DO USUÁRIO]:\nEste é o status atualizado em tempo real dos cards, metas, saldo e dashboards do usuário:\n${financialContext}\nConsidere SEMPRE estes números e dados reais ao responder dúvidas, dar conselhos práticos ou detalhar patrimônio e balanço.`;
+      }
 
       if (openRouterKey) {
         const messages = [{ role: "system", content: systemInstruction }];

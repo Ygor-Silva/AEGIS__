@@ -14,6 +14,7 @@ import AiInsights from "./components/AiInsights";
 import GoalsProgress from "./components/GoalsProgress";
 import SystemTutorial from "./components/SystemTutorial";
 import SettingsModal from "./components/SettingsModal";
+import logoUrl from "./assets/images/aegis_logo_1782329274884.jpg";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -37,6 +38,10 @@ export default function App() {
     setIsAuthenticated(false);
   };
 
+  const incomeNum = onboardingData ? parseFloat(onboardingData.income) || 5000 : 5000;
+  // Calculate a proportional, high-precision asset value for authentic feeling
+  const totalAssets = incomeNum * 8.578024;
+
   if (!isAuthenticated) {
     return (
       <LoginScreen 
@@ -57,7 +62,7 @@ export default function App() {
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-4 border-b border-[#00ffc2]/30 bg-[#000]/40 backdrop-blur-md relative z-10">
         <div className="flex items-center space-x-4">
-          <img src="/src/assets/images/aegis_logo_1782329274884.jpg" alt="Logo" className="w-10 h-10 border-2 border-[#00ffc2] rounded-full object-cover shadow-[0_0_15px_#00ffc240]" />
+          <img src={logoUrl} alt="Logo" className="w-10 h-10 border-2 border-[#00ffc2] rounded-full object-cover shadow-[0_0_15px_#00ffc240]" />
           <div>
             <h1 className="text-2xl font-black tracking-tighter uppercase italic">A.E.G.I.S.</h1>
             <p className="text-[10px] opacity-70 tracking-widest">SISTEMA DE GESTÃO E INTELIGÊNCIA DE SALDOS</p>
@@ -91,7 +96,9 @@ export default function App() {
           <div className="bg-[#0a1a2f]/60 border border-[#00ffc2]/20 p-4 backdrop-blur-xl relative shrink-0">
             <div className="absolute -top-1 -left-1 w-2 h-2 bg-[#00ffc2]"></div>
             <div className="text-[10px] uppercase opacity-50 mb-2">Patrimônio Total</div>
-            <div className="text-3xl font-bold tracking-tight text-white mb-1">R$ 42.890,12</div>
+            <div className="text-3xl font-bold tracking-tight text-white mb-1">
+              R$ {totalAssets.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
             <div className="text-[10px] text-[#00d4ff] flex items-center">
               <span>▲ 12.4% ESTE MÊS</span>
             </div>

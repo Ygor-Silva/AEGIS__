@@ -2,17 +2,24 @@ import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, Percent, Filter } from 'lucide-react';
 
-const data = [
-  { name: 'JAN', despesas: 4000, receitas: 8400, saldo: 4400 },
-  { name: 'FEV', despesas: 3000, receitas: 8398, saldo: 5398 },
-  { name: 'MAR', despesas: 5000, receitas: 9800, saldo: 4800 },
-  { name: 'ABR', despesas: 2780, receitas: 8908, saldo: 6128 },
-  { name: 'MAI', despesas: 1890, receitas: 8800, saldo: 6910 },
-  { name: 'JUN', despesas: 2390, receitas: 8800, saldo: 6410 },
-];
-
 export default function SpendingTrendChart() {
   const [filter, setFilter] = useState<'both' | 'income' | 'expense'>('both');
+
+  const [data] = useState(() => {
+    const savedOnboarding = localStorage.getItem("aegis_onboarding_data");
+    const onboarding = savedOnboarding ? JSON.parse(savedOnboarding) : null;
+    const income = onboarding ? parseFloat(onboarding.income) || 5000 : 5000;
+
+    // Generate highly realistic, proportional historical telemetry data
+    return [
+      { name: 'JAN', despesas: Math.round(income * 0.476), receitas: Math.round(income * 1.0), saldo: Math.round(income * 0.524) },
+      { name: 'FEV', despesas: Math.round(income * 0.357), receitas: Math.round(income * 0.999), saldo: Math.round(income * 0.642) },
+      { name: 'MAR', despesas: Math.round(income * 0.595), receitas: Math.round(income * 1.166), saldo: Math.round(income * 0.571) },
+      { name: 'ABR', despesas: Math.round(income * 0.330), receitas: Math.round(income * 1.060), saldo: Math.round(income * 0.730) },
+      { name: 'MAI', despesas: Math.round(income * 0.225), receitas: Math.round(income * 1.047), saldo: Math.round(income * 0.822) },
+      { name: 'JUN', despesas: Math.round(income * 0.284), receitas: Math.round(income * 1.047), saldo: Math.round(income * 0.763) },
+    ];
+  });
 
   // Calculate stats to make the dashboard highly professional and clear
   const avgIncome = data.reduce((sum, item) => sum + item.receitas, 0) / data.length;

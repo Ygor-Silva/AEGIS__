@@ -11,11 +11,27 @@ interface Goal {
 }
 
 export default function GoalsProgress() {
-  const [goals, setGoals] = useState<Goal[]>([
-    { id: '1', name: 'RESERVA DE EMERGÊNCIA', current: 20000, target: 25000, color: 'neon' },
-    { id: '2', name: 'INVESTIMENTOS LP', current: 12000, target: 15000, color: 'blue' },
-    { id: '3', name: 'FUNDO DE UPGRADES', current: 3500, target: 5000, color: 'magenta' },
-  ]);
+  const [goals, setGoals] = useState<Goal[]>(() => {
+    const savedOnboarding = localStorage.getItem("aegis_onboarding_data");
+    const onboarding = savedOnboarding ? JSON.parse(savedOnboarding) : null;
+    const income = onboarding ? parseFloat(onboarding.income) || 5000 : 5000;
+    
+    // Calculate realistic proportional goals based on the calibrated income
+    const rTarget = Math.round(income * 5); // 5 months of income for emergency reserve
+    const rCurrent = Math.round(rTarget * 0.8); // 80% complete
+    
+    const lpTarget = Math.round(income * 3); // 3 months of income for LP investments
+    const lpCurrent = Math.round(lpTarget * 0.8); // 80% complete
+    
+    const uTarget = Math.round(income * 1); // 1 month of income for upgrades
+    const uCurrent = Math.round(uTarget * 0.7); // 70% complete
+    
+    return [
+      { id: '1', name: 'RESERVA DE EMERGÊNCIA', current: rCurrent, target: rTarget, color: 'neon' },
+      { id: '2', name: 'INVESTIMENTOS LP', current: lpCurrent, target: lpTarget, color: 'blue' },
+      { id: '3', name: 'FUNDO DE UPGRADES', current: uCurrent, target: uTarget, color: 'magenta' },
+    ];
+  });
 
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState('');

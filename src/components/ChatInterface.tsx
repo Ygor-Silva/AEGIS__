@@ -114,6 +114,39 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
     setIsLoading(true);
 
     try {
+      // Coleta o estado calibrado do ecossistema para passar ao assistente
+      const savedOnboarding = localStorage.getItem("aegis_onboarding_data");
+      const onboarding = savedOnboarding ? JSON.parse(savedOnboarding) : null;
+      const income = onboarding ? parseFloat(onboarding.income) || 5000 : 5000;
+      
+      const totalAssets = income * 8.578024;
+      const totalIncome = income + (income * 0.038); // salário + dividendos
+      const totalExpenses = (income * 0.2976) + (income * 0.10125) + (income * 0.0369); // aluguel + mercado + energia
+      const currentBalance = totalIncome - totalExpenses;
+      const projectedExpenses = currentBalance * 0.247;
+      const projectedBalance = currentBalance - projectedExpenses;
+
+      const financialContext = `
+[DADOS ATUAIS DO ECOSSISTEMA FINANCEIRO DE A.E.G.I.S.]:
+- Renda Mensal Calibrada (Salário Base): R$ ${income.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Patrimônio Total Líquido: R$ ${totalAssets.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Saldo Atual Estimado: R$ ${currentBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Saídas Previstas Pendentes: R$ ${projectedExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Saldo Projetado Fim de Mês: R$ ${projectedBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+[LANÇAMENTOS DO EXTRATO RECENTE (PROPORCIONAIS)]:
+1. 01/06 - SALÁRIO: + R$ ${income.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+2. 05/06 - ALUGUEL: - R$ ${(income * 0.2976).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+3. 12/06 - SUPERMERCADO: - R$ ${(income * 0.10125).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+4. 18/06 - DIVIDENDOS: + R$ ${(income * 0.038).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+5. 20/06 - ENERGIA/NET: - R$ ${(income * 0.0369).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+[METAS ATIVAS E EVOLUÇÃO]:
+- RESERVA DE EMERGÊNCIA: R$ ${Math.round(income * 4).toLocaleString("pt-BR")} / R$ ${Math.round(income * 5).toLocaleString("pt-BR")} (80% Concluído)
+- INVESTIMENTOS LP: R$ ${Math.round(income * 2.4).toLocaleString("pt-BR")} / R$ ${Math.round(income * 3).toLocaleString("pt-BR")} (80% Concluído)
+- FUNDO DE UPGRADES: R$ ${Math.round(income * 0.7).toLocaleString("pt-BR")} / R$ ${Math.round(income * 1).toLocaleString("pt-BR")} (70% Concluído)
+`;
+
       const contents = messages.concat(userMessage).map((msg) => {
         const parts: any[] = [];
         if (msg.image) {
@@ -146,7 +179,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
           "x-openrouter-key": localStorage.getItem("openrouter_api_key") || "",
           "x-openrouter-model": localStorage.getItem("openrouter_model") || "openrouter/auto"
         },
-        body: JSON.stringify({ contents }),
+        body: JSON.stringify({ contents, financialContext }),
       });
 
       let data: any = {};

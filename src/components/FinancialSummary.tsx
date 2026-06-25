@@ -1,16 +1,26 @@
 import React, { useState } from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
 
-const data = [
-  { date: '01/06', description: 'SALÁRIO', type: 'income', amount: 8400.00 },
-  { date: '05/06', description: 'ALUGUEL', type: 'expense', amount: 2500.00 },
-  { date: '12/06', description: 'SUPERMERCADO', type: 'expense', amount: 850.50 },
-  { date: '18/06', description: 'DIVIDENDOS', type: 'income', amount: 320.00 },
-  { date: '20/06', description: 'ENERGIA/NET', type: 'expense', amount: 310.20 },
-];
-
 export default function FinancialSummary() {
   const [isCompact, setIsCompact] = useState(false);
+
+  const [data] = useState(() => {
+    const savedOnboarding = localStorage.getItem("aegis_onboarding_data");
+    const onboarding = savedOnboarding ? JSON.parse(savedOnboarding) : null;
+    const income = onboarding ? parseFloat(onboarding.income) || 5000 : 5000;
+
+    return [
+      { date: '01/06', description: 'SALÁRIO', type: 'income', amount: income },
+      { date: '05/06', description: 'ALUGUEL', type: 'expense', amount: income * 0.2976 }, // proportional to 2500/8400
+      { date: '12/06', description: 'SUPERMERCADO', type: 'expense', amount: income * 0.10125 }, // proportional to 850.5/8400
+      { date: '18/06', description: 'DIVIDENDOS', type: 'income', amount: income * 0.038 }, // proportional to 320/8400
+      { date: '20/06', description: 'ENERGIA/NET', type: 'expense', amount: income * 0.0369 }, // proportional to 310.2/8400
+    ];
+  });
+
+  const totalIncome = data.filter(item => item.type === 'income').reduce((acc, item) => acc + item.amount, 0);
+  const totalExpense = data.filter(item => item.type === 'expense').reduce((acc, item) => acc + item.amount, 0);
+  const monthlyBalance = totalIncome - totalExpense;
 
   return (
     <div className="bg-[#0a1a2f]/40 border border-[#00ffc2]/10 p-3 sm:p-4 flex flex-col flex-1 transition-all duration-300 relative overflow-hidden">
@@ -70,7 +80,9 @@ export default function FinancialSummary() {
       
       <div className={`mt-2 flex justify-between items-center border-t border-[#00ffc2]/20 ${isCompact ? 'pt-2' : 'pt-3'}`}>
         <span className="text-[9px] uppercase opacity-50">Balanço Mensal</span>
-        <span className={`font-bold text-[#00ffc2] font-mono ${isCompact ? 'text-xs' : 'text-sm'}`}>R$ 5.059,30</span>
+        <span className={`font-bold text-[#00ffc2] font-mono ${isCompact ? 'text-xs' : 'text-sm'}`}>
+          R$ {monthlyBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
       </div>
     </div>
   );

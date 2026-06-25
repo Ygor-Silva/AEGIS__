@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Fingerprint, Lock, Terminal, User, RefreshCw, ArrowLeft, HelpCircle, Key, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ToastContainer, { emitToast } from './Toast';
+import logoUrl from "../assets/images/aegis_logo_1782329274884.jpg";
 
 interface LocalUser {
   operatorId: string;
@@ -31,7 +32,6 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [stepForgot, setStepForgot] = useState<1 | 2>(1); // 1 = enter ID, 2 = answer question
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const logoUrl = "/src/assets/images/aegis_logo_1782329274884.jpg";
 
   // Initialize default admin user if not present
   useEffect(() => {
