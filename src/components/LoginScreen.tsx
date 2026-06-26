@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Fingerprint, Lock, Terminal, User, RefreshCw, ArrowLeft, HelpCircle, Key, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ToastContainer, { emitToast } from './Toast';
-import logoUrl from "../assets/images/aegis_logo_1782329274884.jpg";
+import logoUrl from "../assets/images/kerdos_logo_1782476296342.jpg";
 
 interface LocalUser {
   operatorId: string;
@@ -35,21 +35,21 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
   // Initialize default admin user if not present
   useEffect(() => {
-    const existing = localStorage.getItem('aegis_users');
+    const existing = localStorage.getItem('kerdos_users');
     if (!existing) {
       const defaultAdmin: LocalUser = {
         operatorId: 'admin',
         accessCode: 'admin',
         securityQuestion: 'favorite_tech',
-        securityAnswer: 'aegis'
+        securityAnswer: 'kerdos'
       };
-      localStorage.setItem('aegis_users', JSON.stringify([defaultAdmin]));
+      localStorage.setItem('kerdos_users', JSON.stringify([defaultAdmin]));
     }
   }, []);
 
   const getUsers = (): LocalUser[] => {
     try {
-      return JSON.parse(localStorage.getItem('aegis_users') || '[]');
+      return JSON.parse(localStorage.getItem('kerdos_users') || '[]');
     } catch {
       return [];
     }
@@ -124,7 +124,7 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
         securityAnswer: securityAnswer.trim().toLowerCase()
       };
 
-      localStorage.setItem('aegis_users', JSON.stringify([...users, newUser]));
+      localStorage.setItem('kerdos_users', JSON.stringify([...users, newUser]));
       emitToast("Nova conta criada com sucesso! Redirecionando...", "success");
       
       // Clean up fields and switch to login
@@ -213,11 +213,11 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
       >
         <div className="relative mb-6 group">
           <div className="absolute inset-0 bg-[var(--theme-color)] blur-[45px] opacity-20 group-hover:opacity-40 transition-opacity rounded-full duration-1000" />
-          <img src={logoUrl} alt="A.E.G.I.S. Logo" className="w-28 h-28 rounded-full border-2 border-[var(--theme-color)]/50 shadow-[0_0_25px_var(--theme-color)40] relative z-10 object-cover" />
+          <img src={logoUrl} alt="KERDOS Logo" className="w-28 h-28 rounded-full border-2 border-[var(--theme-color)]/50 shadow-[0_0_25px_var(--theme-color)40] relative z-10 object-cover" />
         </div>
         
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-black tracking-[0.25em] mb-1 uppercase drop-shadow-[0_0_10px_var(--theme-color)]">A.E.G.I.S.</h1>
+          <h1 className="text-3xl font-black tracking-[0.25em] mb-1 uppercase drop-shadow-[0_0_10px_var(--theme-color)]">KERDOS</h1>
           <p className="text-base uppercase tracking-widest opacity-60 font-mono">Assistente Especializado de Gestão e Inteligência de Saldos</p>
         </div>
 

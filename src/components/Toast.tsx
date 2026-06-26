@@ -9,7 +9,7 @@ interface ToastMessage {
 }
 
 export const emitToast = (message: string, type: ToastMessage['type'] = 'info') => {
-  const event = new CustomEvent('aegis-toast', { detail: { message, type } });
+  const event = new CustomEvent('kerdos-toast', { detail: { message, type } });
   window.dispatchEvent(event);
 };
 
@@ -32,8 +32,8 @@ export default function ToastContainer() {
       }, 4000);
     };
 
-    window.addEventListener('aegis-toast', handleToast);
-    return () => window.removeEventListener('aegis-toast', handleToast);
+    window.addEventListener('kerdos-toast', handleToast);
+    return () => window.removeEventListener('kerdos-toast', handleToast);
   }, []);
 
   return (

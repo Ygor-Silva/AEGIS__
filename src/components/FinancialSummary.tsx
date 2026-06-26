@@ -5,7 +5,7 @@ export default function FinancialSummary() {
   const [isCompact, setIsCompact] = useState(false);
 
   const [data] = useState(() => {
-    const savedOnboarding = localStorage.getItem("aegis_onboarding_data");
+    const savedOnboarding = localStorage.getItem("kerdos_onboarding_data");
     const onboarding = savedOnboarding ? JSON.parse(savedOnboarding) : null;
     const income = onboarding ? parseFloat(onboarding.income) || 5000 : 5000;
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, LogOut, Settings, Download, X, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { emitToast } from './Toast';
+import { generateKerdosPDF } from '../utils/pdfGenerator';
 
 interface QuickActionsProps {
   onLogout: () => void;
@@ -14,8 +15,13 @@ export default function QuickActions({ onLogout, onOpenProfile, onOpenSettings }
 
   const handleExport = () => {
     emitToast("Gerando relatório criptografado...", "info");
-    setTimeout(() => {
-      emitToast("Relatório exportado com sucesso (SYS.DIR/reports)", "success");
+    setTimeout(async () => {
+      try {
+        await generateKerdosPDF();
+        emitToast("Relatório exportado com sucesso (Downloads)", "success");
+      } catch (error) {
+        emitToast("Erro ao gerar relatório", "error");
+      }
       setIsOpen(false);
     }, 1500);
   };

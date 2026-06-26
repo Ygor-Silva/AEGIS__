@@ -15,17 +15,26 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [isCustomModel, setIsCustomModel] = useState(false);
   const [currency, setCurrency] = useState("BRL");
   const [budgetLimit, setBudgetLimit] = useState("3500");
+  const [currentTheme, setCurrentTheme] = useState("neon");
+  const [supabaseUrl, setSupabaseUrl] = useState("");
+  const [supabaseKey, setSupabaseKey] = useState("");
 
   // Load saved values on mount
   useEffect(() => {
     const savedKey = localStorage.getItem("openrouter_api_key") || "";
     const savedModel = localStorage.getItem("openrouter_model") || "openrouter/auto";
-    const savedCurrency = localStorage.getItem("aegis_currency") || "BRL";
-    const savedLimit = localStorage.getItem("aegis_monthly_limit") || "3500";
+    const savedCurrency = localStorage.getItem("kerdos_currency") || "BRL";
+    const savedLimit = localStorage.getItem("kerdos_monthly_limit") || "3500";
+    const savedTheme = localStorage.getItem("kerdos_theme") || "neon";
+    const savedSupUrl = localStorage.getItem("supabase_url") || "";
+    const savedSupKey = localStorage.getItem("supabase_anon_key") || "";
 
     setApiKey(savedKey);
     setCurrency(savedCurrency);
     setBudgetLimit(savedLimit);
+    setCurrentTheme(savedTheme);
+    setSupabaseUrl(savedSupUrl);
+    setSupabaseKey(savedSupKey);
 
     const standardModels = [
       "openrouter/auto",
@@ -62,8 +71,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
     localStorage.setItem("openrouter_api_key", apiKey.trim());
     localStorage.setItem("openrouter_model", finalModel);
-    localStorage.setItem("aegis_currency", currency);
-    localStorage.setItem("aegis_monthly_limit", budgetLimit);
+    localStorage.setItem("kerdos_currency", currency);
+    localStorage.setItem("kerdos_monthly_limit", budgetLimit);
+    localStorage.setItem("supabase_url", supabaseUrl.trim());
+    localStorage.setItem("supabase_anon_key", supabaseKey.trim());
 
     emitToast("⚙️ CONFIGURAÇÕES ATUALIZADAS COM SUCESSO!", "success");
     
@@ -91,7 +102,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           <div className="flex items-center gap-2">
             <Shield size={18} className="animate-pulse text-[var(--theme-color)]" />
             <span className="text-base font-black tracking-[0.2em] uppercase text-white">
-              PAINEL DE CONFIGURAÇÕES A.E.G.I.S.
+              PAINEL DE CONFIGURAÇÕES KERDOS
             </span>
           </div>
           <button
@@ -108,7 +119,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           <div className="bg-[#0a1a2f]/40 border border-[var(--theme-color)]/20 p-4 relative">
             <div className="text-base uppercase text-[#00d4ff] font-bold mb-3 tracking-widest flex items-center gap-1.5">
               <Cpu size={12} />
-              Integração de Inteligência Artificial (OpenRouter)
+              Integração de Inteligência Artificial e Banco de Dados
             </div>
 
             <div className="space-y-3">
@@ -132,9 +143,33 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
-                <p className="text-base text-[var(--theme-color)]/40 mt-1 uppercase leading-tight">
-                  Sua chave fica gravada localmente no navegador e nunca é exposta publicamente. Se vazia, o sistema usará o Gemini local do backend.
-                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-base uppercase tracking-wider text-[var(--theme-color)]/70 mb-1">
+                    Supabase Project URL
+                  </label>
+                  <input
+                    type="text"
+                    value={supabaseUrl}
+                    onChange={(e) => setSupabaseUrl(e.target.value)}
+                    placeholder="https://xxx.supabase.co"
+                    className="w-full bg-black border border-[var(--theme-color)]/30 p-2 text-base text-[var(--theme-color)] focus:border-[var(--theme-color)] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-base uppercase tracking-wider text-[var(--theme-color)]/70 mb-1">
+                    Supabase Anon Key
+                  </label>
+                  <input
+                    type="password"
+                    value={supabaseKey}
+                    onChange={(e) => setSupabaseKey(e.target.value)}
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    className="w-full bg-black border border-[var(--theme-color)]/30 p-2 text-base text-[var(--theme-color)] focus:border-[var(--theme-color)] outline-none"
+                  />
+                </div>
               </div>
 
               <div>
@@ -201,16 +236,37 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 <label className="block text-base uppercase tracking-wider text-[var(--theme-color)]/70 mb-1">
                   Tema da Interface
                 </label>
-                <select
-                  value={localStorage.getItem("aegis_theme") || "neon"}
-                  onChange={(e) => localStorage.setItem("aegis_theme", e.target.value)}
-                  className="w-full bg-black border border-[var(--theme-color)]/30 p-2 text-base text-[var(--theme-color)] outline-none focus:border-[var(--theme-color)] cursor-pointer"
-                >
-                  <option value="neon">Neon Green (Padrão)</option>
-                  <option value="amber">Cyber Amber</option>
-                  <option value="blue">Deep Blue</option>
-                  <option value="violet">Hyper Violet</option>
-                </select>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { id: 'neon', name: 'Neon', color: '#00ffc2' },
+                    { id: 'amber', name: 'Amber', color: '#ffb000' },
+                    { id: 'blue', name: 'Blue', color: '#00d4ff' },
+                    { id: 'violet', name: 'Violet', color: '#b000ff' }
+                  ].map((theme) => {
+                    const isSelected = currentTheme === theme.id;
+                    return (
+                      <button
+                        key={theme.id}
+                        onMouseEnter={() => document.body.className = `theme-${theme.id}`}
+                        onMouseLeave={() => document.body.className = `theme-${currentTheme}`}
+                        onClick={() => {
+                          localStorage.setItem("kerdos_theme", theme.id);
+                          setCurrentTheme(theme.id);
+                          document.body.className = `theme-${theme.id}`;
+                        }}
+                        className={`h-10 rounded-md border-2 flex items-center justify-center text-xs font-bold uppercase transition-all ${
+                          isSelected 
+                            ? 'border-white text-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' 
+                            : 'border-[var(--theme-color)]/30 text-[var(--theme-color)] hover:border-[var(--theme-color)]/80'
+                        }`}
+                        style={{ backgroundColor: `${theme.color}15` }}
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: theme.color, boxShadow: `0 0 5px ${theme.color}` }} />
+                        {theme.name}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </div>
 

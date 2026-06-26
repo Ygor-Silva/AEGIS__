@@ -4,6 +4,7 @@ import { Send, Image as ImageIcon, Mic, Radio, Volume2, Square, X, Camera } from
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import CameraOverlay from "./CameraOverlay";
+import { getSupabase } from "../lib/supabase";
 
 interface ParsedMessage {
   message: string;
@@ -110,7 +111,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
 
     try {
       // Coleta o estado calibrado do ecossistema para passar ao assistente
-      const savedOnboarding = localStorage.getItem("aegis_onboarding_data");
+      const savedOnboarding = localStorage.getItem("kerdos_onboarding_data");
       const onboarding = savedOnboarding ? JSON.parse(savedOnboarding) : null;
       const income = onboarding ? parseFloat(onboarding.income) || 5000 : 5000;
       
@@ -122,7 +123,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
       const projectedBalance = currentBalance - projectedExpenses;
 
       const financialContext = `
-[DADOS ATUAIS DO ECOSSISTEMA FINANCEIRO DE A.E.G.I.S.]:
+[DADOS ATUAIS DO ECOSSISTEMA FINANCEIRO DE KERDOS]:
 - Renda Mensal Calibrada (Salário Base): R$ ${income.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 - Patrimônio Total Líquido: R$ ${totalAssets.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 - Saldo Atual Estimado: R$ ${currentBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -205,6 +206,57 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
             text: data.text,
           },
         ]);
+
+        // Process commands
+        const parsed = parseModelResponse(data.text);
+        if (parsed.action) {
+          const supabase = getSupabase();
+
+          if (parsed.action.includes("ADD_EXPENSE:")) {
+            const match = parsed.action.match(/ADD_EXPENSE:\s*([\d.,]+)\s*\|\s*([^|]+)\s*\|\s*(.+)/i);
+            if (match) {
+               const val = parseFloat(match[1].replace(',', '.'));
+               const newExp = { id: Date.now(), type: 'expense', amount: val, description: match[2].trim(), category: match[3].trim(), date: new Date().toISOString() };
+               
+               if (supabase) {
+                 supabase.from('expenses').insert([{ 
+                   amount: val, 
+                   description: match[2].trim(), 
+                   category: match[3].trim(), 
+                   date: newExp.date 
+                 }]).then(({ error }) => {
+                   if (error) console.error("Error saving expense to Supabase:", error);
+                 });
+               }
+               
+               const exps = JSON.parse(localStorage.getItem('kerdos_expenses') || '[]');
+               localStorage.setItem('kerdos_expenses', JSON.stringify([...exps, newExp]));
+               window.dispatchEvent(new CustomEvent('kerdos-add-transaction', { detail: newExp }));
+            }
+          }
+          if (parsed.action.includes("ADD_INCOME:")) {
+            const match = parsed.action.match(/ADD_INCOME:\s*([\d.,]+)\s*\|\s*(.+)/i);
+            if (match) {
+               const val = parseFloat(match[1].replace(',', '.'));
+               const newInc = { id: Date.now(), type: 'income', amount: val, description: match[2].trim(), date: new Date().toISOString() };
+               
+               if (supabase) {
+                 supabase.from('incomes').insert([{ 
+                   amount: val, 
+                   description: match[2].trim(), 
+                   date: newInc.date 
+                 }]).then(({ error }) => {
+                   if (error) console.error("Error saving income to Supabase:", error);
+                 });
+               }
+
+               const incs = JSON.parse(localStorage.getItem('kerdos_incomes') || '[]');
+               localStorage.setItem('kerdos_incomes', JSON.stringify([...incs, newInc]));
+               window.dispatchEvent(new CustomEvent('kerdos-add-transaction', { detail: newInc }));
+            }
+          }
+        }
+
       } else {
         console.error(data.error);
         setMessages((prev) => [
@@ -412,7 +464,7 @@ export default function ChatInterface({ externalCommand, onExternalCommandProces
               >
                 {msg.role === "model" && (
                   <div className="flex justify-between items-start mb-2 border-b border-[var(--theme-color)]/20 pb-1">
-                    <span className="text-base font-bold tracking-widest text-[var(--theme-color)]">AEGIS_RESPONSE</span>
+                    <span className="text-base font-bold tracking-widest text-[var(--theme-color)]">KERDOS_RESPONSE</span>
                     <button
                       onClick={() => handleReadAloud(msg.id, msg.text)}
                       className={`text-[var(--theme-color)]/70 hover:text-[var(--theme-color)] ${msg.isReading ? 'animate-pulse' : ''}`}

@@ -69,7 +69,7 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
     <div className="absolute inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center border-4 border-[var(--theme-color)]/50 backdrop-blur-sm p-4">
       <div className="flex justify-between items-center w-full max-w-md mb-4">
         <div className="text-base font-bold tracking-widest text-[var(--theme-color)] uppercase">
-          AEGIS // CAMERA SCANNER
+          KERDOS // CAMERA SCANNER
         </div>
         <button
           onClick={onClose}

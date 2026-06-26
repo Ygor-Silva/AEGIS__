@@ -1,18 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, TrendingDown, DollarSign, PieChart, Activity, Briefcase } from 'lucide-react';
+import { Target, TrendingUp, TrendingDown, DollarSign, PieChart, Activity, Briefcase, Trophy, Medal, Award, Star, Zap } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, Legend, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { motion, AnimatePresence } from 'motion/react';
 import { emitToast } from './Toast';
+import { getSupabase } from '../lib/supabase';
 
 interface SmartDashboardProps {
   income: number;
 }
 
 export default function SmartDashboard({ income }: SmartDashboardProps) {
-  const [activeView, setActiveView] = useState<'overview' | 'trends' | 'goals'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'trends' | 'goals' | 'achievements'>('overview');
   const [mainGoalLabel, setMainGoalLabel] = useState('RESERVA DE EMERGÊNCIA');
+  const [customExpenses, setCustomExpenses] = useState<any[]>([]);
+  const [customIncomes, setCustomIncomes] = useState<any[]>([]);
+
+  const loadCustomTransactions = async () => {
+    try {
+      const supabase = getSupabase();
+      if (supabase) {
+        const { data: expData, error: expErr } = await supabase.from('expenses').select('*');
+        const { data: incData, error: incErr } = await supabase.from('incomes').select('*');
+        if (!expErr && expData) setCustomExpenses(expData);
+        if (!incErr && incData) setCustomIncomes(incData);
+      } else {
+        setCustomExpenses(JSON.parse(localStorage.getItem('kerdos_expenses') || '[]'));
+        setCustomIncomes(JSON.parse(localStorage.getItem('kerdos_incomes') || '[]'));
+      }
+    } catch (e) {}
+  };
 
   useEffect(() => {
-    const savedOnboarding = localStorage.getItem("aegis_onboarding_data");
+    loadCustomTransactions();
+    window.addEventListener('kerdos-add-transaction', loadCustomTransactions as EventListener);
+    return () => window.removeEventListener('kerdos-add-transaction', loadCustomTransactions as EventListener);
+  }, []);
+
+  useEffect(() => {
+    const savedOnboarding = localStorage.getItem("kerdos_onboarding_data");
     let goalName = "RESERVA DE EMERGÊNCIA";
     if (savedOnboarding) {
       try {
@@ -30,35 +55,41 @@ export default function SmartDashboard({ income }: SmartDashboardProps) {
     const currentProgress = 0.8; 
     
     if (currentProgress >= 0.8 && currentProgress < 1.0) {
-      const notified80 = localStorage.getItem(`aegis_notified_80_${goalName}`);
+      const notified80 = localStorage.getItem(`kerdos_notified_80_${goalName}`);
       if (!notified80) {
         setTimeout(() => {
           emitToast(`Parabéns! Você atingiu 80% da meta: ${goalName}.`, 'success');
-          localStorage.setItem(`aegis_notified_80_${goalName}`, "true");
+          localStorage.setItem(`kerdos_notified_80_${goalName}`, "true");
         }, 1500);
       }
     } else if (currentProgress >= 1.0) {
-      const notified100 = localStorage.getItem(`aegis_notified_100_${goalName}`);
+      const notified100 = localStorage.getItem(`kerdos_notified_100_${goalName}`);
       if (!notified100) {
         setTimeout(() => {
           emitToast(`Incrível! Você concluiu 100% da meta: ${goalName}.`, 'success');
-          localStorage.setItem(`aegis_notified_100_${goalName}`, "true");
+          localStorage.setItem(`kerdos_notified_100_${goalName}`, "true");
         }, 1500);
       }
     }
   }, [income]);
 
+  // Sum custom values
+  const customSumExpenses = customExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const customSumIncomes = customIncomes.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
   // Real-time dynamic values based on income
-  const totalAssets = income * 8.578024;
-  const totalIncome = income + (income * 0.038); // salary + dividend
-  const totalExpenses = (income * 0.2976) + (income * 0.10125) + (income * 0.0369); // aluguel + mercado + energia
+  const baseTotalAssets = income * 8.578024;
+  const totalAssets = baseTotalAssets + customSumIncomes - customSumExpenses;
+  
+  const totalIncome = income + (income * 0.038) + customSumIncomes; // salary + dividend + custom
+  const totalExpenses = (income * 0.2976) + (income * 0.10125) + (income * 0.0369) + customSumExpenses; // fixed base + custom
   const currentBalance = totalIncome - totalExpenses;
   const projectedExpenses = currentBalance * 0.247;
   const projectedBalance = currentBalance - projectedExpenses;
 
   // Fixed/Variable Breakdown
   const fixedExpenses = income * 0.3576;
-  const variableExpenses = income * 0.23425;
+  const variableExpenses = (income * 0.23425) + customSumExpenses; // Put custom expenses in variable for now
   const invested = income - (fixedExpenses + variableExpenses);
 
   const formatCurrency = (val: number) => val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -72,12 +103,28 @@ export default function SmartDashboard({ income }: SmartDashboardProps) {
     { name: 'JUN', despesas: Math.round(totalExpenses), receitas: Math.round(totalIncome) },
   ];
 
-  const recentTransactions = [
+  let recentTransactions = [
     { date: '01/06', description: 'SALÁRIO', type: 'income', amount: income },
     { date: '05/06', description: 'ALUGUEL', type: 'expense', amount: income * 0.2976 },
     { date: '12/06', description: 'SUPERMERCADO', type: 'expense', amount: income * 0.10125 },
     { date: '18/06', description: 'DIVIDENDOS', type: 'income', amount: income * 0.038 },
   ];
+
+  // Merge custom transactions into recent (and sort by date ideally, but let's just append to top for visual feedback)
+  const mappedCustomExp = customExpenses.map(e => ({
+    date: new Date(e.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    description: e.description.toUpperCase(),
+    type: 'expense',
+    amount: e.amount
+  }));
+  const mappedCustomInc = customIncomes.map(e => ({
+    date: new Date(e.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    description: e.description.toUpperCase(),
+    type: 'income',
+    amount: e.amount
+  }));
+
+  recentTransactions = [...mappedCustomInc, ...mappedCustomExp, ...recentTransactions].slice(0, 8);
 
   // Linear Regression Forecast for End-of-Month Remaining Budget
   const n = trendData.length;
@@ -94,13 +141,21 @@ export default function SmartDashboard({ income }: SmartDashboardProps) {
   const intercept = (sumY - slope * sumX) / n;
   const regressionForecast = Math.max(0, (slope * (n + 1)) + intercept);
 
+  // Achievements Logic
+  const hasOnboarding = localStorage.getItem("kerdos_onboarding_complete") === "true";
+  const isPositiveCashflow = trendData.filter(d => d.receitas > d.despesas).length >= 3;
+  const currentProgressPct = 80; // Hardcoded for demo to 80%
+  const isGoalComplete = currentProgressPct >= 100;
+  const isBudgetMaster = (totalExpenses / totalIncome) < 0.6; // Saving more than 40%
+
   return (
     <div className="flex flex-col h-full bg-[#0a1a2f]/60 border border-[var(--theme-color)]/30 rounded-xl overflow-hidden backdrop-blur-md">
       {/* Header Tabs */}
-      <div className="flex border-b border-[var(--theme-color)]/20">
-        <button onClick={() => setActiveView('overview')} className={`flex-1 py-3 text-xs md:text-sm font-bold tracking-wider uppercase transition-colors ${activeView === 'overview' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50 hover:text-white'}`}>Visão Geral</button>
-        <button onClick={() => setActiveView('trends')} className={`flex-1 py-3 text-xs md:text-sm font-bold tracking-wider uppercase transition-colors ${activeView === 'trends' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50 hover:text-white'}`}>Tendências</button>
-        <button onClick={() => setActiveView('goals')} className={`flex-1 py-3 text-xs md:text-sm font-bold tracking-wider uppercase transition-colors ${activeView === 'goals' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50 hover:text-white'}`}>Metas</button>
+      <div className="flex border-b border-[var(--theme-color)]/20 overflow-x-auto scrollbar-none shrink-0">
+        <button onClick={() => setActiveView('overview')} className={`px-4 py-3 min-w-[120px] flex-1 text-xs md:text-sm font-bold tracking-wider uppercase transition-colors ${activeView === 'overview' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)] border-b-2 border-[var(--theme-color)]' : 'text-white/50 hover:text-white'}`}>Visão Geral</button>
+        <button onClick={() => setActiveView('trends')} className={`px-4 py-3 min-w-[120px] flex-1 text-xs md:text-sm font-bold tracking-wider uppercase transition-colors ${activeView === 'trends' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)] border-b-2 border-[var(--theme-color)]' : 'text-white/50 hover:text-white'}`}>Tendências</button>
+        <button onClick={() => setActiveView('goals')} className={`px-4 py-3 min-w-[120px] flex-1 text-xs md:text-sm font-bold tracking-wider uppercase transition-colors ${activeView === 'goals' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)] border-b-2 border-[var(--theme-color)]' : 'text-white/50 hover:text-white'}`}>Metas</button>
+        <button onClick={() => setActiveView('achievements')} className={`px-4 py-3 min-w-[120px] flex-1 text-xs md:text-sm font-bold tracking-wider uppercase transition-colors flex items-center justify-center gap-1.5 ${activeView === 'achievements' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)] border-b-2 border-[var(--theme-color)]' : 'text-white/50 hover:text-white'}`}><Trophy size={14} /> Conquistas</button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-none">
@@ -121,8 +176,16 @@ export default function SmartDashboard({ income }: SmartDashboardProps) {
           </div>
         </div>
 
-        {activeView === 'overview' && (
-          <div className="space-y-6 animate-fadeIn">
+        <AnimatePresence mode="wait">
+          {activeView === 'overview' && (
+            <motion.div 
+              key="overview"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
             {/* Balance Projection Unified */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[var(--theme-color)]/5 border border-[var(--theme-color)]/20 p-3 rounded-lg">
@@ -210,11 +273,18 @@ export default function SmartDashboard({ income }: SmartDashboardProps) {
                 </ResponsiveContainer>
               </div>
             </div>
-          </div>
-        )}
+            </motion.div>
+          )}
 
-        {activeView === 'trends' && (
-          <div className="space-y-6 animate-fadeIn">
+          {activeView === 'trends' && (
+            <motion.div 
+              key="trends"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
             <h3 className="text-sm font-bold text-[var(--theme-color)] uppercase tracking-wider mb-2 flex items-center gap-2"><TrendingUp size={16}/> Tendência de Caixa</h3>
             <div className="h-48 w-full bg-black/40 border border-[var(--theme-color)]/10 rounded-lg p-2">
               <ResponsiveContainer width="100%" height="100%">
@@ -258,11 +328,18 @@ export default function SmartDashboard({ income }: SmartDashboardProps) {
                 ))}
               </div>
             </div>
-          </div>
-        )}
+            </motion.div>
+          )}
 
-        {activeView === 'goals' && (
-          <div className="space-y-6 animate-fadeIn">
+          {activeView === 'goals' && (
+            <motion.div 
+              key="goals"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
             <h3 className="text-base font-bold text-[var(--theme-color)] uppercase tracking-wider mb-2 flex items-center gap-2"><Target size={16}/> Metas Ativas</h3>
             
             <div className="space-y-4">
@@ -308,8 +385,79 @@ export default function SmartDashboard({ income }: SmartDashboardProps) {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+
+          {activeView === 'achievements' && (
+            <motion.div 
+              key="achievements"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <h3 className="text-base font-bold text-[var(--theme-color)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Trophy size={18}/> Conquistas Desbloqueadas
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  {
+                    id: 'primeiro-passo',
+                    title: 'Primeiro Passo',
+                    desc: 'Você definiu sua primeira meta no sistema e concluiu o Onboarding.',
+                    icon: Star,
+                    color: 'var(--theme-color)',
+                    isUnlocked: hasOnboarding,
+                    progressText: hasOnboarding ? 'DESBLOQUEADO' : 'BLOQUEADO'
+                  },
+                  {
+                    id: 'caixa-positivo',
+                    title: 'Caixa Positivo',
+                    desc: 'Manteve seu saldo no verde por 3 meses consecutivos. Excelente disciplina.',
+                    icon: Zap,
+                    color: '#00d4ff',
+                    isUnlocked: isPositiveCashflow,
+                    progressText: isPositiveCashflow ? 'DESBLOQUEADO' : 'BLOQUEADO'
+                  },
+                  {
+                    id: 'cem-por-cento',
+                    title: '100% da Meta',
+                    desc: 'Atinja 100% do progresso de sua meta principal para desbloquear.',
+                    icon: Medal,
+                    color: '#ffb000',
+                    isUnlocked: isGoalComplete,
+                    progressText: isGoalComplete ? 'DESBLOQUEADO' : `${currentProgressPct}% CONCLUÍDO`
+                  },
+                  {
+                    id: 'mestre-orcamento',
+                    title: 'Mestre do Orçamento',
+                    desc: 'Poupe mais de 40% da sua renda e mantenha as despesas reduzidas.',
+                    icon: Award,
+                    color: '#b000ff',
+                    isUnlocked: isBudgetMaster,
+                    progressText: isBudgetMaster ? 'DESBLOQUEADO' : 'BLOQUEADO'
+                  }
+                ].map((ach, idx) => (
+                  <div key={idx} className={`p-4 rounded-lg flex items-start gap-4 relative overflow-hidden transition-colors ${ach.isUnlocked ? 'bg-black/30 border-2 group cursor-pointer' : 'bg-black/20 border border-white/10 opacity-60 grayscale'}`} style={{ borderColor: ach.isUnlocked ? `${ach.color}80` : undefined }}>
+                    {ach.isUnlocked && <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: `${ach.color}10` }} />}
+                    <div className={`p-3 rounded-full border shrink-0 shadow-lg`} style={{ backgroundColor: ach.isUnlocked ? `${ach.color}20` : 'rgba(255,255,255,0.1)', borderColor: ach.isUnlocked ? `${ach.color}50` : 'rgba(255,255,255,0.2)', boxShadow: ach.isUnlocked ? `0 0 15px ${ach.color}` : 'none' }}>
+                      <ach.icon size={24} color={ach.isUnlocked ? ach.color : 'rgba(255,255,255,0.5)'} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold uppercase tracking-wider mb-1" style={{ color: ach.isUnlocked ? ach.color : 'rgba(255,255,255,0.5)' }}>{ach.title}</h4>
+                      <p className="text-xs mb-2 leading-relaxed" style={{ color: ach.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.4)' }}>{ach.desc}</p>
+                      <div className="text-[10px] font-mono px-2 py-0.5 rounded-full inline-block border" style={{ backgroundColor: ach.isUnlocked ? `${ach.color}10` : 'rgba(255,255,255,0.05)', borderColor: ach.isUnlocked ? `${ach.color}30` : 'rgba(255,255,255,0.1)', color: ach.isUnlocked ? ach.color : 'rgba(255,255,255,0.4)' }}>
+                        {ach.progressText}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

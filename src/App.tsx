@@ -9,25 +9,26 @@ import LoginScreen from "./components/LoginScreen";
 import OnboardingModal from "./components/OnboardingModal";
 import AiInsights from "./components/AiInsights";
 import MarketNews from "./components/MarketNews";
+import FinancialTip from "./components/FinancialTip";
 import SystemTutorial from "./components/SystemTutorial";
 import SettingsModal from "./components/SettingsModal";
-import logoUrl from "./assets/images/aegis_logo_1782329274884.jpg";
+import logoUrl from "./assets/images/kerdos_logo_1782476296342.jpg";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem("aegis_authenticated") === "true";
+    return sessionStorage.getItem("kerdos_authenticated") === "true";
   });
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(() => {
-    return localStorage.getItem("aegis_onboarding_complete") === "true";
+    return localStorage.getItem("kerdos_onboarding_complete") === "true";
   });
   const [onboardingData, setOnboardingData] = useState(() => {
-    const saved = localStorage.getItem("aegis_onboarding_data");
+    const saved = localStorage.getItem("kerdos_onboarding_data");
     return saved ? JSON.parse(saved) : null;
   });
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(() => {
-    return localStorage.getItem("aegis_tutorial_complete") !== "true";
+    return localStorage.getItem("kerdos_tutorial_complete") !== "true";
   });
   
   // Mobile / Desktop View State
@@ -35,12 +36,12 @@ export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   React.useEffect(() => {
-    const theme = localStorage.getItem("aegis_theme") || "neon";
+    const theme = localStorage.getItem("kerdos_theme") || "neon";
     document.body.className = `theme-${theme}`;
   }, []);
 
   const handleLogout = () => {
-    sessionStorage.removeItem("aegis_authenticated");
+    sessionStorage.removeItem("kerdos_authenticated");
     setIsAuthenticated(false);
   };
 
@@ -51,7 +52,7 @@ export default function App() {
     return (
       <LoginScreen 
         onLogin={() => {
-          sessionStorage.setItem("aegis_authenticated", "true");
+          sessionStorage.setItem("kerdos_authenticated", "true");
           setIsAuthenticated(true);
         }} 
       />
@@ -81,7 +82,7 @@ export default function App() {
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[var(--theme-color)]/30 bg-[#000]/40 backdrop-blur-md relative z-50">
           <div className="flex items-center space-x-3">
             <img src={logoUrl} alt="Logo" className="w-8 h-8 border border-[var(--theme-color)] rounded-full object-cover" />
-            <h1 className="text-xl font-black tracking-tighter uppercase italic">A.E.G.I.S.</h1>
+            <h1 className="text-xl font-black tracking-tighter uppercase italic">KERDOS</h1>
           </div>
           <div className="flex space-x-2">
              <button onClick={() => setActiveTab('chat')} className={`p-2 rounded-lg ${activeTab === 'chat' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50'}`}>💬</button>
@@ -188,15 +189,20 @@ export default function App() {
                 transition={{ duration: 0.2 }}
                 className="h-full flex flex-col gap-4 w-full flex-1 overflow-y-auto scrollbar-none"
               >
-                <div className="flex-1 min-h-[500px]">
-                  <SmartDashboard income={incomeNum} />
+                <div className="flex-1 min-h-[500px] flex flex-col xl:flex-row gap-4">
+                  <div className="flex-1">
+                    <SmartDashboard income={incomeNum} />
+                  </div>
+                  <div className="w-full xl:w-80 shrink-0 flex flex-col">
+                    <FinancialTip />
+                  </div>
                 </div>
                 <div className="h-28 bg-black/60 border border-[var(--theme-color)]/20 p-3 overflow-hidden shrink-0 rounded-xl backdrop-blur-md">
                   <div className="text-base font-mono opacity-50 uppercase mb-2">Logs do Sistema v4.0.2</div>
                   <div className="text-base font-mono space-y-1.5 leading-none">
                     <div className="text-blue-400">&gt; SQL_QUERY: RECENT_EXPENSES</div>
                     <div className="text-green-400">&gt; CACHE_HIT: 99.8%</div>
-                    <div className="text-white">&gt; AEGIS_CORE: READY_FOR_CMD</div>
+                    <div className="text-white">&gt; KERDOS_CORE: READY_FOR_CMD</div>
                     <div className="text-blue-400">&gt; SYNCING_CLOUD_DATA...</div>
                   </div>
                 </div>
@@ -223,8 +229,8 @@ export default function App() {
           initialData={onboardingData}
           onClose={isOnboardingComplete ? () => setShowProfileModal(false) : undefined}
           onComplete={(data) => {
-            localStorage.setItem("aegis_onboarding_complete", "true");
-            localStorage.setItem("aegis_onboarding_data", JSON.stringify(data));
+            localStorage.setItem("kerdos_onboarding_complete", "true");
+            localStorage.setItem("kerdos_onboarding_data", JSON.stringify(data));
             setIsOnboardingComplete(true);
             setOnboardingData(data);
             setShowProfileModal(false);

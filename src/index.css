@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-aegis-bg: #020408;
-  --color-aegis-neon: var(--theme-color, #00ffc2);
-  --color-aegis-blue: #00d4ff;
-  --color-aegis-dark: #0a1a2f;
-  --color-aegis-magenta: #b000ff;
+  --color-kerdos-bg: #020408;
+  --color-kerdos-neon: var(--theme-color, #00ffc2);
+  --color-kerdos-blue: #00d4ff;
+  --color-kerdos-dark: #0a1a2f;
+  --color-kerdos-magenta: #b000ff;
 }
 
 :root {
