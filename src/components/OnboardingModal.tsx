@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { ShieldAlert, ChevronRight, X } from 'lucide-react';
 import { emitToast } from './Toast';
+import { uploadProfilePhoto } from '../lib/supabase';
 
 interface OnboardingModalProps {
-  onComplete: (data: { income: string; goal: string; risk: string; age: string }) => void;
-  initialData?: { income: string; goal: string; risk: string; age: string } | null;
+  onComplete: (data: { name: string; photo: string | null; income: string; goal: string; risk: string; age: string }) => void;
+  initialData?: { name?: string; photo?: string | null; income: string; goal: string; risk: string; age: string } | null;
   onClose?: () => void;
 }
 
@@ -13,15 +14,45 @@ export default function OnboardingModal({ onComplete, initialData, onClose }: On
   const [goal, setGoal] = useState(initialData?.goal || '');
   const [risk, setRisk] = useState(initialData?.risk || '');
   const [age, setAge] = useState(initialData?.age || '');
+  const [name, setName] = useState(initialData?.name || '');
+  const [photo, setPhoto] = useState<string | null>(initialData?.photo || null);
+
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    emitToast('Processando imagem...', 'info');
+
+    // Try Supabase first
+    const publicUrl = await uploadProfilePhoto(file);
+    
+    if (publicUrl) {
+      setPhoto(publicUrl);
+      emitToast('Foto salva na nuvem com sucesso.', 'success');
+      setIsUploading(false);
+    } else {
+      // Fallback to local Base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setPhoto(event.target?.result as string);
+        emitToast('Foto salva localmente (Supabase não configurado).', 'success');
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!income || !goal || !risk || !age) {
+    if (!name || !income || !goal || !risk || !age) {
       emitToast('Todos os campos são obrigatórios para a calibração.', 'error');
       return;
     }
     emitToast('Perfil financeiro calibrado com sucesso.', 'success');
-    onComplete({ income, goal, risk, age });
+    onComplete({ name, photo, income, goal, risk, age });
   };
 
   return (
@@ -46,7 +77,21 @@ export default function OnboardingModal({ onComplete, initialData, onClose }: On
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin">
+          <div className="flex gap-4 items-center">
+            <div className="w-16 h-16 shrink-0 bg-black/50 border border-[var(--theme-color)]/30 rounded-full flex items-center justify-center overflow-hidden relative group">
+              {photo ? (
+                <img src={photo} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[var(--theme-color)]/30 text-xs text-center px-1">FOTO</span>
+              )}
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-base uppercase text-[var(--theme-color)]/70 mb-1">Nome de Operador</label>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black/50 border border-[var(--theme-color)]/30 p-2 text-base text-[var(--theme-color)] outline-none focus:border-[var(--theme-color)] font-mono" placeholder="Ex: Alex" />
+            </div>
+          </div>
           <div>
             <label className="block text-base uppercase text-[var(--theme-color)]/70 mb-1">Renda Mensal Estimada (R$)</label>
             <input type="number" value={income} onChange={e => setIncome(e.target.value)} className="w-full bg-black/50 border border-[var(--theme-color)]/30 p-2 text-base text-[var(--theme-color)] outline-none focus:border-[var(--theme-color)] font-mono" placeholder="Ex: 5000" />

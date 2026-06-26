@@ -3,15 +3,19 @@ import { AlertCircle, TrendingDown, TrendingUp } from 'lucide-react';
 
 export default function BalanceProjection() {
   const [currentBalance, projectedExpenses] = (() => {
+    const savedExpenses = localStorage.getItem("kerdos_expenses");
+    const savedIncomes = localStorage.getItem("kerdos_incomes");
     const savedOnboarding = localStorage.getItem("kerdos_onboarding_data");
+    
+    const expenses = savedExpenses ? JSON.parse(savedExpenses) : [];
+    const incomes = savedIncomes ? JSON.parse(savedIncomes) : [];
     const onboarding = savedOnboarding ? JSON.parse(savedOnboarding) : null;
-    const income = onboarding ? parseFloat(onboarding.income) || 5000 : 5000;
+    const baseIncome = onboarding ? parseFloat(onboarding.income) || 0 : 0;
 
-    // Calculate dynamic balance and expected future expenses proportionally
-    const totalIncome = income + (income * 0.038); // salary + dividend
-    const totalExpenses = (income * 0.2976) + (income * 0.10125) + (income * 0.0369); // aluguel + mercado + energia
+    const totalIncome = baseIncome + incomes.reduce((sum: number, inc: any) => sum + (inc.amount || 0), 0);
+    const totalExpenses = expenses.reduce((sum: number, exp: any) => sum + (exp.amount || 0), 0);
     const current = totalIncome - totalExpenses;
-    const projected = current * 0.247; // future estimate
+    const projected = 0; // We could calculate avg daily expense
     return [current, projected];
   })();
 

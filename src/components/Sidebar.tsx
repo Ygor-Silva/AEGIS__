@@ -9,9 +9,10 @@ interface SidebarProps {
   activeTab: 'chat' | 'dashboard';
   setActiveTab: (tab: 'chat' | 'dashboard') => void;
   logoUrl: string;
+  userData: any;
 }
 
-export default function Sidebar({ onLogout, onOpenSettings, onOpenTutorial, onOpenProfile, activeTab, setActiveTab, logoUrl }: SidebarProps) {
+export default function Sidebar({ onLogout, onOpenSettings, onOpenTutorial, onOpenProfile, activeTab, setActiveTab, logoUrl, userData }: SidebarProps) {
   return (
     <aside className="hidden md:flex flex-col w-20 h-full border-r border-[var(--theme-color)]/30 bg-[#000]/80 backdrop-blur-md relative z-20 shrink-0">
       <div className="p-4 flex justify-center items-center border-b border-[var(--theme-color)]/20">
@@ -20,6 +21,7 @@ export default function Sidebar({ onLogout, onOpenSettings, onOpenTutorial, onOp
 
       <nav className="flex-1 flex flex-col items-center py-6 space-y-8">
         <button 
+          id="tour-sidebar-chat"
           onClick={() => setActiveTab('chat')}
           className={`relative p-3 rounded-xl transition-all duration-300 group ${activeTab === 'chat' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/10'}`}
           title="Terminal (Chat)"
@@ -29,6 +31,7 @@ export default function Sidebar({ onLogout, onOpenSettings, onOpenTutorial, onOp
         </button>
 
         <button 
+          id="tour-sidebar-dashboard"
           onClick={() => setActiveTab('dashboard')}
           className={`relative p-3 rounded-xl transition-all duration-300 group ${activeTab === 'dashboard' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/10'}`}
           title="Dashboard Financeiro"
@@ -38,16 +41,22 @@ export default function Sidebar({ onLogout, onOpenSettings, onOpenTutorial, onOp
         </button>
 
         <button 
+          id="tour-profile-button"
           onClick={onOpenProfile}
-          className="relative p-3 rounded-xl transition-all duration-300 group text-white/50 hover:text-blue-400 hover:bg-blue-400/10"
+          className="relative p-1.5 rounded-xl transition-all duration-300 group text-white/50 hover:text-blue-400 hover:bg-blue-400/10 flex flex-col items-center justify-center gap-1"
           title="Perfil do Operador"
         >
-          <User size={24} />
+          {userData?.photo ? (
+            <img src={userData.photo} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-white/20" />
+          ) : (
+            <User size={24} className="m-1.5" />
+          )}
         </button>
       </nav>
 
       <div className="p-4 flex flex-col items-center space-y-4 border-t border-[var(--theme-color)]/20">
         <button 
+          id="tour-tutorial-button"
           onClick={onOpenTutorial}
           className="text-white/40 hover:text-yellow-400 transition-colors"
           title="Ajuda / Tutorial"
@@ -55,6 +64,7 @@ export default function Sidebar({ onLogout, onOpenSettings, onOpenTutorial, onOp
           <HelpCircle size={22} />
         </button>
         <button 
+          id="tour-settings-button"
           onClick={onOpenSettings}
           className="text-white/40 hover:text-white transition-colors"
           title="Configurações do Sistema"

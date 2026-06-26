@@ -20,3 +20,32 @@ export const getSupabase = (): SupabaseClient | null => {
   
   return null;
 };
+
+export const uploadProfilePhoto = async (file: File): Promise<string | null> => {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profiles')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from('profiles')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Error:', error);
+    return null;
+  }
+};

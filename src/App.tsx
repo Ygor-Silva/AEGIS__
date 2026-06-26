@@ -10,7 +10,9 @@ import OnboardingModal from "./components/OnboardingModal";
 import AiInsights from "./components/AiInsights";
 import MarketNews from "./components/MarketNews";
 import FinancialTip from "./components/FinancialTip";
-import SystemTutorial from "./components/SystemTutorial";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+// import SystemTutorial from "./components/SystemTutorial";
 import SettingsModal from "./components/SettingsModal";
 import logoUrl from "./assets/images/kerdos_logo_1782476296342.jpg";
 
@@ -40,13 +42,64 @@ export default function App() {
     document.body.className = `theme-${theme}`;
   }, []);
 
+  React.useEffect(() => {
+    if (showTutorial && !showMobileMenu && !showProfileModal && !showSettingsModal && isOnboardingComplete) {
+      const driverObj = driver({
+        showProgress: true,
+        animate: true,
+        doneBtnText: 'Iniciar Sistema',
+        closeBtnText: 'Pular',
+        nextBtnText: 'Próximo',
+        prevBtnText: 'Voltar',
+        onDestroyStarted: () => {
+          driverObj.destroy();
+          setShowTutorial(false);
+          localStorage.setItem("kerdos_tutorial_complete", "true");
+        },
+        steps: [
+          { popover: { title: 'BEM-VINDO AO KERDOS', description: 'Este é o seu sistema de inteligência financeira. Vamos dar um passeio pelas funcionalidades.' } },
+          { element: '#tour-sidebar-chat', popover: { title: 'Chat / Terminal', description: 'Registre receitas e despesas simplesmente falando com a IA aqui.', side: "right", align: 'start' }},
+          { element: '#tour-sidebar-dashboard', popover: { title: 'Dashboard', description: 'Acompanhe seu saldo, projecão e resumo gráfico dos seus gastos.', side: "right", align: 'start' }},
+          { element: '#tour-profile-button', popover: { title: 'Perfil', description: 'Edite seu nome, informações de conta e meta financeira aqui.', side: "right", align: 'start' }},
+          { element: '#tour-settings-button', popover: { title: 'Configurações', description: 'Configure o banco de dados (Supabase) e a chave de IA para armazenamento na nuvem e mais inteligência.', side: "right", align: 'start' }}
+        ]
+      });
+      // Small timeout to ensure DOM elements are rendered
+      setTimeout(() => {
+        driverObj.drive();
+      }, 500);
+    }
+  }, [showTutorial, isOnboardingComplete, showMobileMenu, showProfileModal, showSettingsModal]);
+
   const handleLogout = () => {
     sessionStorage.removeItem("kerdos_authenticated");
     setIsAuthenticated(false);
   };
 
-  const incomeNum = onboardingData ? parseFloat(onboardingData.income) || 5000 : 5000;
-  const totalAssets = incomeNum * 8.578024;
+  const [totalAssets, setTotalAssets] = useState(0);
+  const [currentBalance, setCurrentBalance] = useState(0);
+
+  const calculateTotals = () => {
+    const savedExpenses = localStorage.getItem("kerdos_expenses");
+    const savedIncomes = localStorage.getItem("kerdos_incomes");
+    const expenses = savedExpenses ? JSON.parse(savedExpenses) : [];
+    const incomes = savedIncomes ? JSON.parse(savedIncomes) : [];
+    const incomeNum = onboardingData ? parseFloat(onboardingData.income) || 0 : 0;
+
+    const sumExpenses = expenses.reduce((sum: number, exp: any) => sum + (exp.amount || 0), 0);
+    const sumIncomes = incomes.reduce((sum: number, inc: any) => sum + (inc.amount || 0), 0);
+
+    setTotalAssets(sumIncomes - sumExpenses);
+    setCurrentBalance((incomeNum + sumIncomes) - sumExpenses);
+  };
+
+  React.useEffect(() => {
+    calculateTotals();
+    window.addEventListener('kerdos-add-transaction', calculateTotals);
+    return () => window.removeEventListener('kerdos-add-transaction', calculateTotals);
+  }, [onboardingData]);
+
+  const incomeNum = onboardingData ? parseFloat(onboardingData.income) || 0 : 0;
 
   if (!isAuthenticated) {
     return (
@@ -69,6 +122,7 @@ export default function App() {
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
         logoUrl={logoUrl}
+        userData={onboardingData}
         onLogout={handleLogout}
         onOpenProfile={() => setShowProfileModal(true)}
         onOpenSettings={() => setShowSettingsModal(true)}
@@ -85,8 +139,8 @@ export default function App() {
             <h1 className="text-xl font-black tracking-tighter uppercase italic">KERDOS</h1>
           </div>
           <div className="flex space-x-2">
-             <button onClick={() => setActiveTab('chat')} className={`p-2 rounded-lg ${activeTab === 'chat' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50'}`}>💬</button>
-             <button onClick={() => setActiveTab('dashboard')} className={`p-2 rounded-lg ${activeTab === 'dashboard' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50'}`}>📊</button>
+             <button id="tour-mobile-chat" onClick={() => setActiveTab('chat')} className={`p-2 rounded-lg ${activeTab === 'chat' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50'}`}>💬</button>
+             <button id="tour-mobile-dashboard" onClick={() => setActiveTab('dashboard')} className={`p-2 rounded-lg ${activeTab === 'dashboard' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50'}`}>📊</button>
              <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="p-2 rounded-lg text-white/50 hover:text-[var(--theme-color)]">
                {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
              </button>
@@ -99,8 +153,12 @@ export default function App() {
                 onClick={() => { setShowProfileModal(true); setShowMobileMenu(false); }}
                 className="flex items-center gap-3 p-3 rounded-lg text-white hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/10 transition-colors"
               >
-                <User size={18} />
-                <span className="font-bold tracking-wider uppercase text-sm">Perfil</span>
+                {onboardingData?.photo ? (
+                  <img src={onboardingData.photo} alt="Profile" className="w-5 h-5 rounded-full object-cover" />
+                ) : (
+                  <User size={18} />
+                )}
+                <span className="font-bold tracking-wider uppercase text-sm">Perfil {onboardingData?.name ? `(${onboardingData.name})` : ''}</span>
               </button>
               <button 
                 onClick={() => { setShowTutorial(true); setShowMobileMenu(false); }}
@@ -131,6 +189,7 @@ export default function App() {
           <AnimatePresence mode="wait">
             {activeTab === 'chat' ? (
               <motion.section 
+                id="tour-chat-interface"
                 key="chat"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -167,11 +226,11 @@ export default function App() {
                       </div>
                       <div className="bg-[var(--theme-color)]/5 border border-[var(--theme-color)]/20 p-3 rounded-lg flex flex-col justify-center min-w-[140px]">
                          <span className="text-xs font-bold text-white/50 uppercase mb-1">Patrimônio Atual</span>
-                         <span className="text-sm font-black text-white">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeNum * 8.578024)}</span>
+                         <span className="text-sm font-black text-white">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAssets)}</span>
                       </div>
                       <div className="bg-[var(--theme-color)]/5 border border-[var(--theme-color)]/20 p-3 rounded-lg flex flex-col justify-center min-w-[140px]">
                          <span className="text-xs font-bold text-white/50 uppercase mb-1">Saldo em Caixa</span>
-                         <span className="text-sm font-black text-[var(--theme-color)]">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((incomeNum + (incomeNum * 0.038)) - (incomeNum * 0.456))}</span>
+                         <span className="text-sm font-black text-[var(--theme-color)]">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(currentBalance)}</span>
                       </div>
                    </div>
                 </div>
@@ -182,6 +241,7 @@ export default function App() {
               </motion.section>
             ) : (
               <motion.aside 
+                id="tour-smart-dashboard"
                 key="dashboard"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -237,9 +297,7 @@ export default function App() {
           }} 
         />
       )}
-      {showTutorial && (
-        <SystemTutorial onClose={() => setShowTutorial(false)} />
-      )}
+      {/* Old tutorial modal replaced by driver.js */}
       <ToastContainer />
     </div>
   );

@@ -73,42 +73,37 @@ export default function SmartDashboard({ income }: SmartDashboardProps) {
     }
   }, [income]);
 
-  // Sum custom values
+  // Calculate actual totals
   const customSumExpenses = customExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
   const customSumIncomes = customIncomes.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
-  // Real-time dynamic values based on income
-  const baseTotalAssets = income * 8.578024;
-  const totalAssets = baseTotalAssets + customSumIncomes - customSumExpenses;
+  // Instead of mock logic, start at 0 plus user's logged transactions
+  const totalAssets = customSumIncomes - customSumExpenses;
   
-  const totalIncome = income + (income * 0.038) + customSumIncomes; // salary + dividend + custom
-  const totalExpenses = (income * 0.2976) + (income * 0.10125) + (income * 0.0369) + customSumExpenses; // fixed base + custom
+  // Real-time dynamic values based on income and custom entries
+  const totalIncome = income + customSumIncomes; // salary (base) + custom
+  const totalExpenses = customSumExpenses; // no mock fixed base
   const currentBalance = totalIncome - totalExpenses;
-  const projectedExpenses = currentBalance * 0.247;
+  const projectedExpenses = 0; // We can't project easily without mock data, or maybe use customSumExpenses average
   const projectedBalance = currentBalance - projectedExpenses;
 
-  // Fixed/Variable Breakdown
-  const fixedExpenses = income * 0.3576;
-  const variableExpenses = (income * 0.23425) + customSumExpenses; // Put custom expenses in variable for now
-  const invested = income - (fixedExpenses + variableExpenses);
+  // Fixed/Variable Breakdown (Just split custom into categories if we have them, else all in variable)
+  const fixedExpenses = customExpenses.filter(e => e.isFixed).reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const variableExpenses = customSumExpenses - fixedExpenses; 
+  const invested = 0; // No mock investments
 
   const formatCurrency = (val: number) => val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const trendData = [
-    { name: 'JAN', despesas: Math.round(totalExpenses * 1.1), receitas: Math.round(totalIncome * 0.95) },
-    { name: 'FEV', despesas: Math.round(totalExpenses * 0.9), receitas: Math.round(totalIncome * 0.98) },
-    { name: 'MAR', despesas: Math.round(totalExpenses * 1.05), receitas: Math.round(totalIncome * 1.02) },
-    { name: 'ABR', despesas: Math.round(totalExpenses * 0.95), receitas: Math.round(totalIncome * 1.05) },
-    { name: 'MAI', despesas: Math.round(totalExpenses * 1.15), receitas: Math.round(totalIncome * 0.99) },
+    { name: 'JAN', despesas: 0, receitas: 0 },
+    { name: 'FEV', despesas: 0, receitas: 0 },
+    { name: 'MAR', despesas: 0, receitas: 0 },
+    { name: 'ABR', despesas: 0, receitas: 0 },
+    { name: 'MAI', despesas: 0, receitas: 0 },
     { name: 'JUN', despesas: Math.round(totalExpenses), receitas: Math.round(totalIncome) },
   ];
 
-  let recentTransactions = [
-    { date: '01/06', description: 'SALÁRIO', type: 'income', amount: income },
-    { date: '05/06', description: 'ALUGUEL', type: 'expense', amount: income * 0.2976 },
-    { date: '12/06', description: 'SUPERMERCADO', type: 'expense', amount: income * 0.10125 },
-    { date: '18/06', description: 'DIVIDENDOS', type: 'income', amount: income * 0.038 },
-  ];
+  let recentTransactions: any[] = [];
 
   // Merge custom transactions into recent (and sort by date ideally, but let's just append to top for visual feedback)
   const mappedCustomExp = customExpenses.map(e => ({
