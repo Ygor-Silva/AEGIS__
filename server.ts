@@ -37,7 +37,7 @@ async function startServer() {
 Seu Perfil e Tom de Voz:
 - Prático e Direto: Responda sem rodeios. Use linguagem acessível, mas demonstre autoridade financeira.
 - Foco em Otimização: Você sempre busca a melhor relação custo-benefício (seja para compras, viagens ou contas fixas).
-- Analítico: Quando o usuário for novo (patrimônio ou histórico de despesas zerados), faça perguntas graduais e não-intrusivas (sem pedir dados bancários sensíveis, senhas ou CPFs) para entender o perfil financeiro dele (idade, objetivos principais, maiores desafios de gastos, se é autônomo ou CLT). Faça uma pergunta por vez para não sobrecarregar.
+- Analítico: Quando o usuário for novo (patrimônio ou histórico de despesas zerados), faça perguntas graduais e não-intrusivas (sem pedir dados bancários sensíveis, senhas ou CPFs) para entender o perfil financeiro dele (idade, objetivos principais, maiores desafios de gastos, se é autônomo ou CLT). Peça ativamente para ele incluir suas despesas fixas (como aluguel, contas de luz, internet) para que o sistema possa alimentar os cards, previsões e gráficos do dashboard financeiro. Faça uma pergunta de cada vez para facilitar a interação.
 
 Regras de Estruturação da Resposta:
 Para que o aplicativo processe sua resposta corretamente, você deve Sempre dividir sua resposta em três blocos bem definidos, usando a exata formatação abaixo. Nunca fuja desse padrão.
@@ -119,10 +119,11 @@ Restrições:
       });
       res.json({ text: response.text });
     } catch (error: any) {
-      console.error(error);
       if (error.message && (error.message.includes("429") || error.message.includes("503"))) {
+        console.warn("Gemini Chat API rate limit or quota exceeded, returning graceful overlay warning.");
         return res.json({ text: "🟢 [SISTEMA: SOBRECARGA DETECTADA]\nOs servidores centrais estão operando no limite de processamento. A inteligência de dados retornará em breve. Por favor, aguarde alguns segundos e tente novamente." });
       }
+      console.error("Chat API unexpected error:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -160,10 +161,11 @@ Restrições:
 
       res.json({ text: response.text });
     } catch (error: any) {
-      console.error(error);
       if (error.message && (error.message.includes("429") || error.message.includes("503"))) {
+         console.warn("Gemini Transcribe API rate limit or quota exceeded, returning graceful notice.");
          return res.json({ text: "[SISTEMA: TRANSCRIÇÃO INDISPONÍVEL DEVIDO A ALTA DEMANDA]" });
       }
+      console.error("Transcribe API unexpected error:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -188,10 +190,11 @@ Restrições:
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       res.json({ audio: base64Audio });
     } catch (error: any) {
-      console.error(error);
       if (error.message && (error.message.includes("429") || error.message.includes("503"))) {
+         console.warn("Gemini TTS API rate limit or quota exceeded, returning null audio.");
          return res.json({ audio: null });
       }
+      console.error("TTS API unexpected error:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -240,11 +243,12 @@ Restrições:
 
       res.json({ category: response.text?.trim() });
     } catch (error: any) {
-      console.error(error);
       // Fallback for API limit or high demand
       if (error.message && (error.message.includes("429") || error.message.includes("503"))) {
+         console.warn("Gemini Categorize API rate limit or quota exceeded, using Outros.");
          return res.json({ category: "Outros" });
       }
+      console.error("Categorize API unexpected error:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -281,7 +285,7 @@ Restrições:
       
       res.json(JSON.parse(response.text || '{"headlines": []}'));
     } catch (error: any) {
-      console.error("News API Error:", error);
+      console.warn("Finance News API quota exceeded or rate limited. Returning cached local fallback news.");
       // Fallback in case of 503 or other API errors to avoid breaking the UI
       res.json({
         headlines: [
@@ -387,6 +391,94 @@ Restrições:
     } catch (e) {
       console.error("Live API connection error:", e);
       clientWs.close();
+    }
+  });
+
+  // Weekly Financial performance report via AI & simulated/real Email draft
+  app.post("/api/weekly-summary", async (req, res) => {
+    try {
+      const { incomes, expenses, income, email } = req.body;
+      
+      const totalCustomIncomes = incomes.reduce((sum: number, curr: any) => sum + (curr.amount || 0), 0);
+      const totalExpenses = expenses.reduce((sum: number, curr: any) => sum + (curr.amount || 0), 0);
+      const netSavings = (income + totalCustomIncomes) - totalExpenses;
+
+      const prompt = `Você é o KERDOS, Inteligência Financeira Sênior. Sua missão é gerar um resumo semanal do desempenho financeiro do usuário e preparar um esboço de e-mail para ele.
+      
+      Analise os seguintes dados financeiros do usuário:
+      - Renda Mensal Base (Salário): R$ ${income}
+      - Outras Receitas do Período: R$ ${totalCustomIncomes}
+      - Despesas Totais do Período: R$ ${totalExpenses}
+      - Saldo Líquido do Período: R$ ${netSavings}
+      - Despesas Recentes: ${JSON.stringify(expenses.slice(0, 8))}
+      - Receitas Recentes: ${JSON.stringify(incomes.slice(0, 8))}
+
+      Crie um rascunho de e-mail de desempenho financeiro semanal focado em inteligência de saldos, otimização de gastos e incentivos práticos. 
+      O e-mail deve ter um tom profissional, amigável e encorajador. Ele deve incluir:
+      1. Um assunto atraente.
+      2. Introdução calorosa e balanço geral das finanças do usuário (se ele economizou ou gastou muito).
+      3. Análise crítica das despesas com base na regra 50/30/20 (explicando se o usuário está controlando bem suas despesas fixas e variáveis).
+      4. Três dicas personalizadas acionáveis baseadas nas transações listadas.
+      5. Fechamento motivador.
+
+      O e-mail deve ser formatado em HTML limpo, moderno e responsivo, usando cores elegantes de finanças (tons de verde, azul escuro, cinza e branco), espaçamento generoso e visualização clara de tabelas/cards. Não use blocos de código markdown (\`\`\`) fora do formato JSON solicitado.
+
+      Retorne estritamente um objeto JSON com as chaves "subject", "body" e "summary". Não retorne nada além do JSON puro.
+      Exemplo de formato:
+      {
+        "subject": "Kerdos: Seu Resumo de Desempenho Financeiro Semanal",
+        "body": "<html>...</html>",
+        "summary": "Um breve parágrafo resumindo as principais descobertas."
+      }`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          temperature: 0.2,
+        },
+      });
+
+      const responseText = response.text || "{}";
+      const resultJson = JSON.parse(responseText);
+
+      let sent = false;
+      if (process.env.RESEND_API_KEY) {
+        try {
+          const resendRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "Kerdos <onboarding@resend.dev>",
+              to: email || "usuario@kerdos.com",
+              subject: resultJson.subject,
+              html: resultJson.body,
+            }),
+          });
+          if (resendRes.ok) {
+            sent = true;
+          } else {
+            console.error("Resend error response:", await resendRes.text());
+          }
+        } catch (e) {
+          console.error("Error sending via Resend:", e);
+        }
+      }
+
+      res.json({
+        subject: resultJson.subject,
+        body: resultJson.body,
+        summary: resultJson.summary,
+        sent,
+        hasResendKey: !!process.env.RESEND_API_KEY
+      });
+    } catch (error: any) {
+      console.error("Weekly Summary API Error:", error);
+      res.status(500).json({ error: "Erro ao gerar resumo de IA: " + error.message });
     }
   });
 

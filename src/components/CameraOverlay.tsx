@@ -14,29 +14,39 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
   useEffect(() => {
+    let activeStream: MediaStream | null = null;
     async function setupCamera() {
       try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
+        let mediaStream: MediaStream;
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+          });
+        } catch (firstErr) {
+          // Fallback to any available camera (e.g., front-facing webcam on laptops)
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+        }
+        activeStream = mediaStream;
         setStream(mediaStream);
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
         }
       } catch (err: any) {
         console.error("Error accessing camera:", err);
-        emitToast("Falha ao acessar câmera: Dispositivo não encontrado", "error");
+        emitToast("Câmera não disponível. Dispositivo de captura não encontrado.", "error");
         onClose();
       }
     }
     setupCamera();
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+      if (activeStream) {
+        activeStream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [stream]);
+  }, []);
 
   const takePhoto = () => {
     if (videoRef.current && canvasRef.current) {

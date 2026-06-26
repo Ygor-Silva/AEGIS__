@@ -1,13 +1,13 @@
 import React from 'react';
-import { MessageSquare, LayoutDashboard, Target, Activity, LogOut, Settings, HelpCircle, User } from 'lucide-react';
+import { MessageSquare, LayoutDashboard, Target, Activity, LogOut, Settings, HelpCircle, User, BarChart2 } from 'lucide-react';
 
 interface SidebarProps {
   onLogout: () => void;
   onOpenSettings: () => void;
   onOpenTutorial: () => void;
   onOpenProfile: () => void;
-  activeTab: 'chat' | 'dashboard';
-  setActiveTab: (tab: 'chat' | 'dashboard') => void;
+  activeTab: 'chat' | 'dashboard' | 'reports';
+  setActiveTab: (tab: 'chat' | 'dashboard' | 'reports') => void;
   logoUrl: string;
   userData: any;
 }
@@ -38,6 +38,16 @@ export default function Sidebar({ onLogout, onOpenSettings, onOpenTutorial, onOp
         >
           <LayoutDashboard size={24} />
           {activeTab === 'dashboard' && <span className="absolute -left-1 top-2 bottom-2 w-1 bg-[var(--theme-color)] rounded-r-md shadow-[0_0_10px_var(--theme-color)]" />}
+        </button>
+
+        <button 
+          id="tour-sidebar-reports"
+          onClick={() => setActiveTab('reports')}
+          className={`relative p-3 rounded-xl transition-all duration-300 group ${activeTab === 'reports' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50 hover:text-[var(--theme-color)] hover:bg-[var(--theme-color)]/10'}`}
+          title="Relatórios Consolidados"
+        >
+          <BarChart2 size={24} />
+          {activeTab === 'reports' && <span className="absolute -left-1 top-2 bottom-2 w-1 bg-[var(--theme-color)] rounded-r-md shadow-[0_0_10px_var(--theme-color)]" />}
         </button>
 
         <button 

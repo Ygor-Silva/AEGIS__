@@ -1,9 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, Percent, Filter } from 'lucide-react';
 
 export default function SpendingTrendChart() {
   const [filter, setFilter] = useState<'both' | 'income' | 'expense'>('both');
+
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+
+  const getTooltipPos = () => {
+    if (!mousePos || !chartRef.current) return undefined;
+    const w = chartRef.current.clientWidth;
+    const h = chartRef.current.clientHeight;
+    const tooltipWidth = 180;
+    const tooltipHeight = 120;
+    const margin = 10;
+    let tx = mousePos.x + 15;
+    let ty = mousePos.y + 15;
+    if (tx + tooltipWidth > w - margin) tx = mousePos.x - tooltipWidth - 15;
+    if (tx < margin) tx = margin;
+    if (ty + tooltipHeight > h - margin) ty = mousePos.y - tooltipHeight - 15;
+    if (ty < margin) ty = margin;
+    return { x: tx, y: ty };
+  };
 
   const [data] = useState(() => {
     const savedOnboarding = localStorage.getItem("kerdos_onboarding_data");
@@ -81,9 +100,20 @@ export default function SpendingTrendChart() {
       </div>
 
       {/* Main Chart Stage */}
-      <div className="flex-1 w-full h-full min-h-[140px]">
+      <div ref={chartRef} className="flex-1 w-full h-full min-h-[140px] relative">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+          <AreaChart 
+            data={data} 
+            margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
+            onMouseMove={(state) => {
+              if (state && state.chartX !== undefined && state.chartY !== undefined) {
+                setMousePos({ x: state.chartX, y: state.chartY });
+              } else {
+                setMousePos(null);
+              }
+            }}
+            onMouseLeave={() => setMousePos(null)}
+          >
             <defs>
               <linearGradient id="colorReceitas" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#00d4ff" stopOpacity={0.35}/>
@@ -123,6 +153,7 @@ export default function SpendingTrendChart() {
               }}
               labelStyle={{ color: 'var(--theme-color)', fontWeight: 'bold' }}
               itemStyle={{ color: '#ffffff' }}
+              position={getTooltipPos()}
             />
             <Legend 
               iconType="circle" 

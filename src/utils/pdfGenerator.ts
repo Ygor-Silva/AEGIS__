@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { getSupabase } from './supabase';
+import { getSupabase } from '../lib/supabase';
 
 export const generateKerdosPDF = async () => {
   const doc = new jsPDF();
@@ -77,17 +77,14 @@ export const generateKerdosPDF = async () => {
   doc.setFont('helvetica', 'bold');
   doc.text(`${userData.goal ? userData.goal.toUpperCase() : 'NÃO DEFINIDO'}`, 50, 75);
 
-  // Totals Calculation (matching SmartDashboard logic approximately)
+  // Totals Calculation (matching clean SmartDashboard logic)
   const baseIncome = Number(userData.income) || 0;
   const customIncomeTotal = incomes.reduce((acc: number, inc: any) => acc + (inc.amount || 0), 0);
-  const totalIncome = baseIncome + (baseIncome * 0.038) + customIncomeTotal;
+  const totalIncome = baseIncome + customIncomeTotal;
   
-  const customExpenseTotal = expenses.reduce((acc: number, exp: any) => acc + (exp.amount || 0), 0);
-  const baseExpenses = (baseIncome * 0.2976) + (baseIncome * 0.10125) + (baseIncome * 0.0369);
-  const totalExpense = baseExpenses + customExpenseTotal;
-  
+  const totalExpense = expenses.reduce((acc: number, exp: any) => acc + (exp.amount || 0), 0);
   const balance = totalIncome - totalExpense;
-  const totalAssets = baseIncome * 8.578024;
+  const totalAssets = balance;
 
   // Executive Summary Cards
   doc.setFontSize(14);

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import ChatInterface from "./components/ChatInterface";
 import Sidebar from "./components/Sidebar";
 import SmartDashboard from "./components/SmartDashboard";
+import ReportsTab from "./components/ReportsTab";
 import ToastContainer from "./components/Toast";
 import LoginScreen from "./components/LoginScreen";
 import OnboardingModal from "./components/OnboardingModal";
@@ -34,7 +35,7 @@ export default function App() {
   });
   
   // Mobile / Desktop View State
-  const [activeTab, setActiveTab] = useState<'chat' | 'dashboard'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'dashboard' | 'reports'>('chat');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   React.useEffect(() => {
@@ -141,6 +142,7 @@ export default function App() {
           <div className="flex space-x-2">
              <button id="tour-mobile-chat" onClick={() => setActiveTab('chat')} className={`p-2 rounded-lg ${activeTab === 'chat' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50'}`}>💬</button>
              <button id="tour-mobile-dashboard" onClick={() => setActiveTab('dashboard')} className={`p-2 rounded-lg ${activeTab === 'dashboard' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50'}`}>📊</button>
+             <button id="tour-mobile-reports" onClick={() => setActiveTab('reports')} className={`p-2 rounded-lg ${activeTab === 'reports' ? 'bg-[var(--theme-color)]/20 text-[var(--theme-color)]' : 'text-white/50'}`}>📈</button>
              <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="p-2 rounded-lg text-white/50 hover:text-[var(--theme-color)]">
                {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
              </button>
@@ -239,7 +241,7 @@ export default function App() {
                   <ChatInterface />
                 </div>
               </motion.section>
-            ) : (
+            ) : activeTab === 'dashboard' ? (
               <motion.aside 
                 id="tour-smart-dashboard"
                 key="dashboard"
@@ -267,6 +269,17 @@ export default function App() {
                   </div>
                 </div>
               </motion.aside>
+            ) : (
+              <motion.section 
+                key="reports"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="h-full flex flex-col flex-1 overflow-hidden"
+              >
+                <ReportsTab />
+              </motion.section>
             )}
           </AnimatePresence>
         </div>

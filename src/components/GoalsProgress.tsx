@@ -16,15 +16,22 @@ export default function GoalsProgress() {
     const onboarding = savedOnboarding ? JSON.parse(savedOnboarding) : null;
     const income = onboarding ? parseFloat(onboarding.income) || 5000 : 5000;
     
+    // Load custom transactions to calculate exact assets
+    const customExpenses = JSON.parse(localStorage.getItem('kerdos_expenses') || '[]');
+    const customIncomes = JSON.parse(localStorage.getItem('kerdos_incomes') || '[]');
+    const customSumExpenses = customExpenses.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
+    const customSumIncomes = customIncomes.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
+    const totalAssets = customSumIncomes - customSumExpenses;
+
     // Calculate realistic proportional goals based on the calibrated income
     const rTarget = Math.round(income * 5); // 5 months of income for emergency reserve
-    const rCurrent = Math.round(rTarget * 0.8); // 80% complete
+    const rCurrent = Math.min(rTarget, Math.max(0, Math.round(totalAssets * 0.5)));
     
     const lpTarget = Math.round(income * 3); // 3 months of income for LP investments
-    const lpCurrent = Math.round(lpTarget * 0.8); // 80% complete
+    const lpCurrent = Math.min(lpTarget, Math.max(0, Math.round(totalAssets * 0.3)));
     
     const uTarget = Math.round(income * 1); // 1 month of income for upgrades
-    const uCurrent = Math.round(uTarget * 0.7); // 70% complete
+    const uCurrent = Math.min(uTarget, Math.max(0, Math.round(totalAssets * 0.2)));
     
     return [
       { id: '1', name: 'RESERVA DE EMERGÊNCIA', current: rCurrent, target: rTarget, color: 'neon' },
